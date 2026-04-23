@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sage Barista Pro — Shot Lab v2</title>
+<!-- saved from url=(0067)file:///C:/Users/klaus.andrade/Downloads/barista-pro-simulator.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sage Barista Pro — Shot Simulator</title>
 <style>
   :root {
     --bg: #1a1210; --panel: #241915; --panel-2: #2e2119;
@@ -14,11 +14,25 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
   .app { max-width: 1440px; margin: 0 auto; padding: 24px; }
-  header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
   header h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: 0.5px; }
   header h1 span { color: var(--accent); }
   header .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
   .machine-tag { font-size: 11px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .tabs button {
+    background: transparent; border: none; color: var(--muted);
+    padding: 12px 18px; font-size: 13px; letter-spacing: 1px;
+    text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s; font-weight: 600;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
   .grid { display: grid; grid-template-columns: 340px 1fr 340px; gap: 20px; }
   @media (max-width: 1150px) { .grid { grid-template-columns: 1fr; } }
   .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
@@ -31,19 +45,58 @@
   .control label { font-size: 13px; }
   .control .val { font-family: "SF Mono", Menlo, monospace; font-size: 12px; color: var(--accent); background: var(--panel-2); padding: 2px 8px; border-radius: 3px; }
   .control .scale { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 3px; }
+
   input[type="range"] { width: 100%; appearance: none; -webkit-appearance: none; height: 4px; background: var(--panel-2); border-radius: 2px; outline: none; }
   input[type="range"]::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 16px; height: 16px; background: var(--accent); border-radius: 50%; cursor: pointer; border: 2px solid var(--panel); }
   input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; background: var(--accent); border-radius: 50%; cursor: pointer; border: 2px solid var(--panel); }
+  input[type="range"]:disabled { opacity: 0.4; }
+
+  select {
+    width: 100%; background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 8px 10px; font-size: 12px; cursor: pointer;
+    font-family: inherit;
+  }
+
   .toggle-group { display: flex; gap: 6px; background: var(--panel-2); padding: 3px; border-radius: 6px; }
   .toggle-group button { flex: 1; background: transparent; color: var(--muted); border: none; padding: 8px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
   .toggle-group button.active { background: var(--accent); color: #1a1210; font-weight: 600; }
   .toggle-group button:hover:not(.active) { color: var(--text); }
+  .toggle-group button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Stage */
   .stage { display: flex; flex-direction: column; align-items: center; gap: 16px; }
   .stage-svg-wrap { width: 100%; display: flex; justify-content: center; position: relative; }
   .stage-svg { width: 100%; max-width: 440px; height: auto; transition: filter 0.4s; }
   .stage-svg.perfect { filter: drop-shadow(0 0 14px rgba(217, 139, 74, 0.55)); }
   .perfect-badge { position: absolute; top: 8px; right: 8px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #1a1210; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; padding: 5px 10px; border-radius: 4px; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
   .perfect-badge.on { opacity: 1; }
+
+  .shot-timer-wrap {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 14px; width: 100%;
+    justify-content: space-between;
+  }
+  .shot-timer-wrap .timer-label {
+    font-size: 10px; letter-spacing: 1.5px; color: var(--muted);
+    text-transform: uppercase;
+  }
+  .shot-timer-wrap .timer-val {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 22px; font-weight: 600; color: var(--accent);
+  }
+  .shot-timer-wrap .pull-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #1a1210; border: none; padding: 10px 18px;
+    border-radius: 4px; font-weight: 700; cursor: pointer;
+    font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .shot-timer-wrap .pull-btn:hover { filter: brightness(1.1); }
+  .shot-timer-wrap .pull-btn:disabled { background: var(--panel); color: var(--muted); cursor: not-allowed; }
+  .shot-timer-wrap .pull-btn.stop { background: var(--bad); color: #fff; }
+
   .flow-hint { font-size: 11px; color: var(--muted); text-align: center; font-family: "SF Mono", Menlo, monospace; letter-spacing: 1px; }
   .meters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
   .meter { background: var(--panel-2); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); }
@@ -51,6 +104,7 @@
   .meter-head .score { color: var(--text); font-weight: 600; }
   .meter-bar { height: 6px; background: #1a1210; border-radius: 3px; overflow: hidden; }
   .meter-fill { height: 100%; transition: width 0.4s, background 0.4s; }
+
   .verdict { font-size: 13px; line-height: 1.6; }
   .verdict .head { font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
@@ -58,9 +112,13 @@
   .badge.warn { background: rgba(232,181,74,0.15); color: var(--warn); }
   .badge.bad { background: rgba(217,83,79,0.15); color: var(--bad); }
   .badge.star { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #1a1210; }
+
   .insight { font-size: 12px; color: var(--muted); line-height: 1.55; padding: 10px 12px; background: var(--panel-2); border-left: 2px solid var(--accent); border-radius: 0 4px 4px 0; margin-bottom: 8px; }
   .insight:last-child { margin-bottom: 0; }
   .insight strong { color: var(--text); }
+  .insight.warn { border-left-color: var(--warn); }
+  .insight.bad { border-left-color: var(--bad); }
+
   .milk-section { opacity: 0.4; pointer-events: none; transition: opacity 0.25s; }
   .milk-section.on { opacity: 1; pointer-events: auto; }
   .switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
@@ -69,306 +127,947 @@
   .switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: var(--muted); border-radius: 50%; transition: all 0.2s; }
   .switch input:checked + .track { background: var(--accent); }
   .switch input:checked + .track::after { left: 18px; background: #1a1210; }
+
   .preset-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .preset { background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.15s; }
   .preset:hover { border-color: var(--accent); color: var(--text); }
   .preset.star { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #1a1210; border-color: transparent; font-weight: 600; }
-  .preset.star:hover { filter: brightness(1.1); }
+
   .ratio-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--panel-2); padding: 4px 10px; border-radius: 4px; font-family: "SF Mono", Menlo, monospace; font-size: 12px; color: var(--accent); }
   .tasting { font-size: 12px; color: var(--text); padding: 10px 12px; background: var(--panel-2); border-radius: 6px; line-height: 1.5; }
   .tasting-title { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
   .radar-wrap { display: flex; justify-content: center; padding: 6px 0; }
   .radar-wrap svg { width: 200px; height: 200px; }
-  .roadmap { font-size: 11px; color: var(--muted); line-height: 1.6; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 6px; }
-  .roadmap strong { color: var(--text); display: block; margin-bottom: 4px; }
+
+  /* Pressure chart */
+  .pressure-chart { width: 100%; background: var(--panel-2); border-radius: 6px; padding: 10px; border: 1px solid var(--border); }
+  .pressure-chart svg { width: 100%; height: 100px; display: block; }
+  .pressure-chart .head { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .pressure-chart .head .name { color: var(--text); font-weight: 600; }
+
+  /* Grinder retention warning */
+  .grinder-warn {
+    display: none; padding: 10px 12px; background: rgba(232, 181, 74, 0.08);
+    border: 1px solid rgba(232, 181, 74, 0.3); border-radius: 6px;
+    font-size: 12px; color: var(--warn); align-items: center; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .grinder-warn.on { display: flex; }
+  .grinder-warn .icon { font-size: 16px; }
+  .grinder-warn .purge-btn {
+    margin-left: auto; background: var(--warn); color: #1a1210;
+    border: none; padding: 5px 10px; border-radius: 3px;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  /* Maintenance tab */
+  .maint-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .maint-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .maint-card .freq {
+    display: inline-block; font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 3px;
+    margin-bottom: 10px; font-weight: 600;
+  }
+  .freq.daily { background: rgba(111,191,115,0.15); color: var(--good); }
+  .freq.weekly { background: rgba(217,139,74,0.15); color: var(--accent); }
+  .freq.monthly { background: rgba(232,181,74,0.15); color: var(--warn); }
+  .freq.alert { background: rgba(217,83,79,0.15); color: var(--bad); }
+  .maint-card h3 { margin: 0 0 8px 0; font-size: 15px; }
+  .maint-card .steps { margin: 0; padding-left: 0; list-style: none; }
+  .maint-card .steps li {
+    font-size: 12px; color: var(--muted); line-height: 1.5;
+    padding: 6px 0 6px 28px; border-bottom: 1px dashed var(--border);
+    position: relative;
+  }
+  .maint-card .steps li::before {
+    content: counter(step); counter-increment: step;
+    position: absolute; left: 0; top: 6px;
+    width: 20px; height: 20px; background: var(--panel-2);
+    border: 1px solid var(--border); border-radius: 50%;
+    text-align: center; font-size: 10px; line-height: 18px;
+    color: var(--accent); font-weight: 600;
+  }
+  .maint-card .steps { counter-reset: step; }
+  .maint-card .steps li:last-child { border-bottom: none; }
+  .maint-card .note {
+    font-size: 11px; color: var(--muted); padding: 8px 10px;
+    background: var(--panel-2); border-radius: 4px; margin-top: 10px;
+    border-left: 2px solid var(--accent);
+  }
+  .maint-card .note strong { color: var(--text); }
+
+  /* Technique tab */
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .tech-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .tech-card h3 { margin: 0 0 4px 0; font-size: 16px; color: var(--accent); }
+  .tech-card .difficulty { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; }
+  .tech-svg-wrap { background: var(--panel-2); border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+  .tech-svg-wrap svg { width: 100%; height: 180px; display: block; }
+  .tech-split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .tech-split .tech-svg-wrap { margin-bottom: 0; padding: 10px; }
+  .tech-split .tech-svg-wrap svg { height: 160px; }
+  .tech-split .tech-label {
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 6px;
+    text-align: center;
+  }
+  @media (max-width: 500px) {
+    .tech-split { grid-template-columns: 1fr; }
+  }
+  .tech-steps { font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .tech-steps ol { margin: 0; padding-left: 20px; }
+  .tech-steps li { margin-bottom: 5px; }
+  .tech-steps strong { color: var(--text); }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <div>
-      <h1>Shot <span>Lab</span> <span style="font-size:14px;opacity:0.5;">v2</span></h1>
-      <div class="sub">Dial in your espresso visually — now with the perfect shot</div>
+      <h1>Shot <span>Lab</span> <span style="font-size:14px;opacity:0.5;">by Klaus & Claude</span></h1>
+      <div class="sub">Dial in, animate, maintain, and learn</div>
     </div>
     <div class="machine-tag">Sage Barista Pro</div>
   </header>
 
-  <div class="grid">
-    <div class="panel">
-      <h2>Espresso</h2>
-      <div class="section">
-        <div class="control">
-          <div class="control-head"><label>Grind size</label><span class="val" id="grindVal">11</span></div>
-          <input type="range" id="grind" min="1" max="30" value="11" />
-          <div class="scale"><span>Fine</span><span>Coarse</span></div>
-        </div>
-        <div class="control">
-          <div class="control-head"><label>Dose (in)</label><span class="val" id="doseVal">18.0 g</span></div>
-          <input type="range" id="dose" min="14" max="22" step="0.5" value="18" />
-        </div>
-        <div class="control">
-          <div class="control-head"><label>Tamp pressure</label><span class="val" id="tampVal">30 lb</span></div>
-          <input type="range" id="tamp" min="10" max="50" value="30" />
-          <div class="scale"><span>Light</span><span>Heavy</span></div>
-        </div>
-        <div class="control">
-          <div class="control-head"><label>Pre-infusion</label><span class="val" id="preVal">7 s</span></div>
-          <input type="range" id="pre" min="0" max="15" value="7" />
-          <div class="scale"><span>None</span><span>Long soak</span></div>
-        </div>
-        <div class="control">
-          <div class="control-head"><label>Shot time</label><span class="val" id="timeVal">28 s</span></div>
-          <input type="range" id="time" min="15" max="45" value="28" />
-        </div>
-        <div class="control">
-          <div class="control-head"><label>Yield (out)</label><span class="val" id="yieldVal">36 g</span></div>
-          <input type="range" id="yield" min="18" max="60" value="36" />
-          <div style="margin-top:6px;"><span class="ratio-chip">Ratio <span id="ratioVal">1:2.0</span></span></div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="control">
-          <div class="control-head"><label>Water temp</label><span class="val" id="waterTempVal">93 °C</span></div>
-          <input type="range" id="waterTemp" min="88" max="96" value="93" />
-          <div class="scale"><span>Bright/light</span><span>Bold/dark</span></div>
-        </div>
-        <div class="control">
-          <div class="control-head"><label>Bean freshness</label><span class="val" id="freshVal">14 days</span></div>
-          <input type="range" id="fresh" min="1" max="60" value="14" />
-          <div class="scale"><span>Just roasted</span><span>Stale</span></div>
-        </div>
-      </div>
-      <div class="section">
-        <div class="control">
-          <label style="display:block;margin-bottom:6px;">Portafilter</label>
-          <div class="toggle-group" id="pfGroup">
-            <button data-val="stock">Stock (dual wall)</button>
-            <button data-val="bottomless" class="active">Bottomless</button>
-          </div>
-        </div>
-        <div class="control">
-          <label style="display:block;margin-bottom:6px;">Basket</label>
-          <div class="toggle-group" id="basketGroup">
-            <button data-val="single">Single (8g)</button>
-            <button data-val="double" class="active">Double (18g)</button>
-            <button data-val="triple">Triple (22g)</button>
-          </div>
-        </div>
-      </div>
-      <div class="section">
-        <label style="display:block;margin-bottom:6px;font-size:12px;color:var(--muted);">Quick presets</label>
-        <div class="preset-row">
-          <button class="preset star" data-preset="perfect">★ Perfect shot</button>
-          <button class="preset" data-preset="classic">Classic double</button>
-          <button class="preset" data-preset="ristretto">Ristretto</button>
-          <button class="preset" data-preset="lungo">Lungo</button>
-          <button class="preset" data-preset="modern">Modern light</button>
-        </div>
-      </div>
-    </div>
+  <nav class="tabs">
+    <button data-tab="lab" class="active">Lab</button>
+    <button data-tab="techniques">Pour techniques</button>
+    <button data-tab="maintenance">Maintenance</button>
+  </nav>
 
-    <div class="panel stage">
-      <h2 style="align-self:flex-start;">Live View</h2>
-      <div class="stage-svg-wrap">
-        <div class="perfect-badge" id="perfectBadge">★ PERFECT PULL</div>
-        <svg class="stage-svg" id="stageSvg" viewBox="0 0 420 520" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="cremaGrad" cx="50%" cy="40%" r="60%">
-              <stop offset="0%" stop-color="#e8b97a" />
-              <stop offset="70%" stop-color="#c88a4a" />
-              <stop offset="100%" stop-color="#8a5528" />
-            </radialGradient>
-            <linearGradient id="espressoGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#4a2411" />
-              <stop offset="100%" stop-color="#1a0a04" />
-            </linearGradient>
-            <linearGradient id="metalGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#b0b0b0" />
-              <stop offset="50%" stop-color="#707070" />
-              <stop offset="100%" stop-color="#4a4a4a" />
-            </linearGradient>
-            <linearGradient id="spoutGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#888" />
-              <stop offset="100%" stop-color="#444" />
-            </linearGradient>
-            <linearGradient id="flowGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#d4a574" stop-opacity="0.9" />
-              <stop offset="100%" stop-color="#6a3416" stop-opacity="0.95" />
-            </linearGradient>
-            <linearGradient id="milkGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fffaf0" />
-              <stop offset="100%" stop-color="#f0e4d0" />
-            </linearGradient>
-          </defs>
-          <g id="machineGroup">
-            <rect x="140" y="20" width="140" height="30" rx="3" fill="#2a2a2a" stroke="#555" stroke-width="1"/>
-            <rect x="155" y="50" width="110" height="18" fill="url(#metalGrad)" />
-            <rect x="60" y="78" width="95" height="14" rx="7" fill="#2a1a10" stroke="#1a0a04" />
-            <circle cx="64" cy="85" r="6" fill="#1a0a04"/>
-            <path d="M 155,72 L 265,72 L 258,110 L 162,110 Z" fill="url(#metalGrad)" stroke="#333" stroke-width="0.5"/>
-            <g id="stockSpouts" style="display:none;">
-              <path d="M 188,110 L 185,128 L 195,128 L 192,110 Z" fill="url(#spoutGrad)" />
-              <path d="M 228,110 L 225,128 L 235,128 L 232,110 Z" fill="url(#spoutGrad)" />
-            </g>
-            <g id="bottomlessBasket">
-              <ellipse cx="210" cy="110" rx="48" ry="5" fill="#1a0a04" />
-              <rect x="162" y="105" width="96" height="8" fill="#3a3a3a" />
-            </g>
-          </g>
-          <g id="flowGroup"></g>
-          <g id="cupGroup">
-            <ellipse cx="210" cy="480" rx="115" ry="12" fill="#e8e0d4" />
-            <ellipse cx="210" cy="478" rx="115" ry="10" fill="#f2ebe0" />
-            <path d="M 135,310 Q 135,460 170,475 L 250,475 Q 285,460 285,310 Z" fill="#f2ebe0" stroke="#c8bfae" stroke-width="1.5"/>
-            <path d="M 285,340 Q 320,345 320,380 Q 320,415 285,420" fill="none" stroke="#c8bfae" stroke-width="4" />
-            <ellipse cx="210" cy="315" rx="75" ry="10" fill="#d4c8b2" />
-            <clipPath id="cupClip">
-              <path d="M 138,313 Q 138,458 172,472 L 248,472 Q 282,458 282,313 Z" />
-            </clipPath>
-            <g clip-path="url(#cupClip)">
-              <rect id="espressoLayer" x="130" y="400" width="160" height="80" fill="url(#espressoGrad)" />
-              <rect id="cremaLayer" x="130" y="390" width="160" height="12" fill="url(#cremaGrad)" />
-              <g id="cremaDots"></g>
-              <rect id="milkLayer" x="130" y="500" width="160" height="0" fill="url(#milkGrad)" opacity="0"/>
-              <g id="latteArt" opacity="0"></g>
-            </g>
-            <ellipse cx="210" cy="311" rx="75" ry="8" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.5"/>
-          </g>
-          <g id="steamGroup" opacity="0">
-            <path d="M 180,295 Q 175,280 185,265 Q 195,250 185,235" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"/>
-            <path d="M 210,295 Q 215,278 205,260 Q 195,245 210,225" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"/>
-            <path d="M 240,295 Q 235,282 245,265 Q 255,250 240,235" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"/>
-          </g>
-        </svg>
+  <!-- ============================ LAB TAB ============================ -->
+  <div class="tab-content active" data-tab="lab">
+    <div class="grid">
+
+      <!-- LEFT PANEL -->
+      <div class="panel">
+        <h2>Beans</h2>
+        <div class="section">
+          <div class="control">
+            <label style="display:block;margin-bottom:6px;">Roast level</label>
+            <div class="toggle-group" id="roastGroup">
+              <button data-val="light">Light</button>
+              <button data-val="medium" class="active">Medium</button>
+              <button data-val="dark">Dark</button>
+            </div>
+          </div>
+          <div class="control">
+            <label style="display:block;margin-bottom:6px;">Origin / profile</label>
+            <select id="origin">
+              <option value="blend">House blend (balanced)</option>
+              <option value="ethiopian">Ethiopian — floral, citrus, tea</option>
+              <option value="colombian">Colombian — caramel, balanced</option>
+              <option value="brazilian">Brazilian — chocolate, nutty</option>
+              <option value="kenyan">Kenyan — berry, wine, bright</option>
+              <option value="sumatran">Sumatran — earthy, spicy, heavy</option>
+              <option value="guatemalan">Guatemalan — cocoa, spice</option>
+            </select>
+          </div>
+          <div class="control">
+            <div class="control-head"><label>Freshness</label><span class="val" id="freshVal">14 days</span></div>
+            <input type="range" id="fresh" min="1" max="60" value="14">
+            <div class="scale"><span>Just roasted</span><span>Stale</span></div>
+          </div>
+        </div>
+
+        <h2>Espresso</h2>
+        <div class="section">
+          <div class="grinder-warn" id="grinderWarn">
+            <span class="icon">⚠</span>
+            <span>Old grounds in chute</span>
+            <button class="purge-btn" id="purgeBtn">Purge 2g</button>
+          </div>
+
+          <div class="control">
+            <div class="control-head"><label>Grind size</label><span class="val" id="grindVal">11</span></div>
+            <input type="range" id="grind" min="1" max="30" value="11">
+            <div class="scale"><span>Fine</span><span>Coarse</span></div>
+          </div>
+          <div class="control">
+            <div class="control-head"><label>Dose (in)</label><span class="val" id="doseVal">18.0 g</span></div>
+            <input type="range" id="dose" min="14" max="22" step="0.5" value="18">
+          </div>
+          <div class="control">
+            <div class="control-head"><label>Tamp pressure</label><span class="val" id="tampVal">30 lb</span></div>
+            <input type="range" id="tamp" min="10" max="50" value="30">
+            <div class="scale"><span>Light</span><span>Heavy</span></div>
+          </div>
+          <div class="control">
+            <div class="control-head"><label>Pre-infusion</label><span class="val" id="preVal">7 s</span></div>
+            <input type="range" id="pre" min="0" max="15" value="7">
+          </div>
+          <div class="control">
+            <div class="control-head"><label>Shot time</label><span class="val" id="timeVal">28 s</span></div>
+            <input type="range" id="time" min="15" max="45" value="28">
+          </div>
+          <div class="control">
+            <div class="control-head"><label>Yield (out)</label><span class="val" id="yieldVal">36 g</span></div>
+            <input type="range" id="yield" min="18" max="60" value="36">
+            <div style="margin-top:6px;"><span class="ratio-chip">Ratio <span id="ratioVal">1:2.00</span></span></div>
+          </div>
+          <div class="control">
+            <div class="control-head"><label>Water temp</label><span class="val" id="waterTempVal">93 °C</span></div>
+            <input type="range" id="waterTemp" min="88" max="96" value="93">
+          </div>
+        </div>
+
+        <h2>Pressure profile</h2>
+        <div class="section">
+          <div class="control">
+            <div class="toggle-group" id="profileGroup" style="margin-bottom:10px;">
+              <button data-val="flat" class="active">Flat 9-bar</button>
+              <button data-val="ramp">Ramp</button>
+              <button data-val="decline">Decline</button>
+            </div>
+            <div class="pressure-chart">
+              <div class="head">
+                <span class="name" id="profileName">Flat 9-bar</span>
+                <span>0 → <span id="profileTime">35s</span> · peak <span id="profilePeak">9.0 bar</span></span>
+              </div>
+              <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+                <defs>
+                  <lineargradient id="profileFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#d98b4a" stop-opacity="0.3"></stop>
+                    <stop offset="100%" stop-color="#d98b4a" stop-opacity="0.05"></stop>
+                  </lineargradient>
+                </defs>
+                <g stroke="#3a2a20" stroke-width="0.5" fill="none">
+                  <line x1="0" y1="20" x2="300" y2="20"></line>
+                  <line x1="0" y1="50" x2="300" y2="50"></line>
+                  <line x1="0" y1="80" x2="300" y2="80"></line>
+                </g>
+                <g fill="#a89585" font-size="8" font-family="monospace">
+                  <text x="2" y="18">9</text>
+                  <text x="2" y="48">6</text>
+                  <text x="2" y="78">3</text>
+                </g>
+                <path id="profilePath" d="M 0,68 L 5,67.25 L 10,66.5 L 15,65.75 L 20,65 L 25,64.25 L 30,63.5 L 35,62.75 L 40,62 L 45,61.25 L 50,60.5 L 54.99999999999999,59.75 L 60,14 L 65,14 L 70,14 L 75,14 L 80,14 L 85,14 L 90,14 L 95,14 L 100,14 L 105,14 L 109.99999999999999,14 L 115.00000000000001,14 L 120,14 L 125,14 L 130,14 L 135,14 L 140,14 L 145,14 L 150,14 L 155.00000000000003,14 L 160,14 L 165,14 L 170,14 L 175,14 L 180,14 L 185,14 L 190,14 L 195,14 L 200,14 L 205,14 L 210,14 L 215,14 L 219.99999999999997,14 L 225,14 L 230.00000000000003,14 L 235,14 L 240,14 L 245,14 L 250,14 L 255,14 L 260,14 L 265,14 L 270,14 L 275,14 L 280,14 L 285,14 L 290,14 L 295,14 L 300,14 L 300,100 L 0,100 Z" fill="url(#profileFill)" stroke="#d98b4a" stroke-width="1.5"></path>
+                <line id="profileCursor" x1="0" y1="0" x2="0" y2="100" stroke="#fff" stroke-width="1" opacity="0"></line>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <h2>Hardware</h2>
+        <div class="section">
+          <div class="control">
+            <label style="display:block;margin-bottom:6px;">Portafilter</label>
+            <div class="toggle-group" id="pfGroup">
+              <button data-val="stock">Stock (dual wall)</button>
+              <button data-val="bottomless" class="active">Bottomless</button>
+            </div>
+          </div>
+          <div class="control">
+            <label style="display:block;margin-bottom:6px;">Basket</label>
+            <div class="toggle-group" id="basketGroup">
+              <button data-val="single">Single</button>
+              <button data-val="double" class="active">Double</button>
+              <button data-val="triple">Triple</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <label style="display:block;margin-bottom:6px;font-size:12px;color:var(--muted);">Presets</label>
+          <div class="preset-row">
+            <button class="preset star" data-preset="perfect">★ Perfect shot</button>
+            <button class="preset" data-preset="classic">Classic</button>
+            <button class="preset" data-preset="ristretto">Ristretto</button>
+            <button class="preset" data-preset="lungo">Lungo</button>
+            <button class="preset" data-preset="modern">Modern light</button>
+          </div>
+        </div>
       </div>
-      <div class="flow-hint" id="flowHint">BOTTOMLESS · EXTRACTING...</div>
-      <div class="meters">
-        <div class="meter">
-          <div class="meter-head"><span>Strength</span><span class="score" id="strengthScore">—</span></div>
-          <div class="meter-bar"><div class="meter-fill" id="strengthFill" style="width:50%;background:var(--accent);"></div></div>
+
+      <!-- CENTER STAGE -->
+      <div class="panel stage">
+        <h2 style="align-self:flex-start;">Live View</h2>
+
+        <div class="shot-timer-wrap">
+          <div>
+            <div class="timer-label">Shot timer</div>
+            <div class="timer-val" id="timerDisplay">0.0s</div>
+          </div>
+          <button class="pull-btn" id="pullBtn">▶ Pull Shot</button>
         </div>
-        <div class="meter">
-          <div class="meter-head"><span>Crema</span><span class="score" id="cremaScore">—</span></div>
-          <div class="meter-bar"><div class="meter-fill" id="cremaFill" style="width:50%;background:var(--crema);"></div></div>
-        </div>
-        <div class="meter">
-          <div class="meter-head"><span>Body</span><span class="score" id="bodyScore">—</span></div>
-          <div class="meter-bar"><div class="meter-fill" id="bodyFill" style="width:50%;background:var(--accent-2);"></div></div>
-        </div>
-        <div class="meter">
-          <div class="meter-head"><span>Balance</span><span class="score" id="balanceScore">—</span></div>
-          <div class="meter-bar"><div class="meter-fill" id="balanceFill" style="width:50%;background:var(--good);"></div></div>
-        </div>
-      </div>
-      <div style="width:100%;">
-        <div class="tasting-title" style="text-align:center;margin-bottom:4px;">Taste profile</div>
-        <div class="radar-wrap">
-          <svg viewBox="0 0 200 200">
-            <g stroke="#3a2a20" stroke-width="1" fill="none">
-              <polygon points="100,20 180,100 100,180 20,100" />
-              <polygon points="100,40 160,100 100,160 40,100" />
-              <polygon points="100,60 140,100 100,140 60,100" />
-              <line x1="100" y1="20" x2="100" y2="180"/>
-              <line x1="20" y1="100" x2="180" y2="100"/>
+
+        <div class="stage-svg-wrap">
+          <div class="perfect-badge" id="perfectBadge">★ PERFECT PULL</div>
+          <svg class="stage-svg" id="stageSvg" viewBox="0 0 420 520" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialgradient id="cremaGrad" cx="50%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#e8b97a"></stop>
+                <stop offset="70%" stop-color="#c88a4a"></stop>
+                <stop offset="100%" stop-color="#8a5528"></stop>
+              </radialgradient>
+              <lineargradient id="espressoGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#4a2411"></stop>
+                <stop offset="100%" stop-color="#1a0a04"></stop>
+              </lineargradient>
+              <lineargradient id="metalGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#b0b0b0"></stop>
+                <stop offset="50%" stop-color="#707070"></stop>
+                <stop offset="100%" stop-color="#4a4a4a"></stop>
+              </lineargradient>
+              <lineargradient id="spoutGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#888"></stop>
+                <stop offset="100%" stop-color="#444"></stop>
+              </lineargradient>
+              <lineargradient id="flowGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#d4a574" stop-opacity="0.9"></stop>
+                <stop offset="100%" stop-color="#6a3416" stop-opacity="0.95"></stop>
+              </lineargradient>
+              <lineargradient id="flowGradBlonde" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#edc796" stop-opacity="0.8"></stop>
+                <stop offset="100%" stop-color="#a07848" stop-opacity="0.9"></stop>
+              </lineargradient>
+              <lineargradient id="flowGradDark" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#5a2a12" stop-opacity="0.95"></stop>
+                <stop offset="100%" stop-color="#1a0a04" stop-opacity="1"></stop>
+              </lineargradient>
+              <lineargradient id="milkGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fffaf0"></stop>
+                <stop offset="100%" stop-color="#f0e4d0"></stop>
+              </lineargradient>
+            </defs>
+            <g id="machineGroup">
+              <rect x="140" y="20" width="140" height="30" rx="3" fill="#2a2a2a" stroke="#555" stroke-width="1"></rect>
+              <rect x="155" y="50" width="110" height="18" fill="url(#metalGrad)"></rect>
+              <rect x="60" y="78" width="95" height="14" rx="7" fill="#2a1a10" stroke="#1a0a04"></rect>
+              <circle cx="64" cy="85" r="6" fill="#1a0a04"></circle>
+              <path d="M 155,72 L 265,72 L 258,110 L 162,110 Z" fill="url(#metalGrad)" stroke="#333" stroke-width="0.5"></path>
+              <g id="stockSpouts" style="display:none;">
+                <path d="M 188,110 L 185,128 L 195,128 L 192,110 Z" fill="url(#spoutGrad)"></path>
+                <path d="M 228,110 L 225,128 L 235,128 L 232,110 Z" fill="url(#spoutGrad)"></path>
+              </g>
+              <g id="bottomlessBasket">
+                <ellipse cx="210" cy="110" rx="48" ry="5" fill="#1a0a04"></ellipse>
+                <rect x="162" y="105" width="96" height="8" fill="#3a3a3a"></rect>
+              </g>
             </g>
-            <g fill="#a89585" font-size="10" font-family="monospace" text-anchor="middle">
-              <text x="100" y="14">SWEET</text>
-              <text x="188" y="103">BITTER</text>
-              <text x="100" y="194">BODY</text>
-              <text x="12" y="103">SOUR</text>
+            <g id="flowGroup"><path d="M 207.9857142857143,113 L 212.0142857142857,113 L 211.00714285714287,390 L 208.99285714285713,390 Z" fill="url(#flowGrad)" opacity="0.95"></path></g>
+            <g id="cupGroup">
+              <ellipse cx="210" cy="480" rx="115" ry="12" fill="#e8e0d4"></ellipse>
+              <ellipse cx="210" cy="478" rx="115" ry="10" fill="#f2ebe0"></ellipse>
+              <path d="M 135,310 Q 135,460 170,475 L 250,475 Q 285,460 285,310 Z" fill="#f2ebe0" stroke="#c8bfae" stroke-width="1.5"></path>
+              <path d="M 285,340 Q 320,345 320,380 Q 320,415 285,420" fill="none" stroke="#c8bfae" stroke-width="4"></path>
+              <ellipse cx="210" cy="315" rx="75" ry="10" fill="#d4c8b2"></ellipse>
+              <clippath id="cupClip">
+                <path d="M 138,313 Q 138,458 172,472 L 248,472 Q 282,458 282,313 Z"></path>
+              </clippath>
+              <g clip-path="url(#cupClip)">
+                <rect id="espressoLayer" x="130" y="441.5079396551724" width="160" height="23.49206034482762" fill="url(#espressoGrad)"></rect>
+                <rect id="cremaLayer" x="130" y="430.2" width="160" height="11.307939655172412" fill="url(#cremaGrad)" opacity="0.8776336206896551"></rect>
+                <g id="cremaDots"><circle cx="257.83290469359355" cy="432.68313241465967" r="1.8380558804941907" fill="#6a3416" opacity="0.43577706658487225"></circle><circle cx="206.3653057337496" cy="436.3458920591184" r="1.731335374911268" fill="#6a3416" opacity="0.3410456333221809"></circle><circle cx="154.79487713660217" cy="433.6912120823566" r="1.5774939158436825" fill="#6a3416" opacity="0.4581303933949317"></circle><circle cx="173.07449989987413" cy="434.69260614056486" r="1.6255300784385631" fill="#6a3416" opacity="0.4954463650317563"></circle><circle cx="252.7933001794186" cy="436.701433345457" r="1.6181780211023422" fill="#6a3416" opacity="0.5931864622736829"></circle><circle cx="182.61738072242184" cy="437.30559155143686" r="1.6286085076795285" fill="#6a3416" opacity="0.4627974468780237"></circle><circle cx="198.1188796378605" cy="435.6016061623709" r="1.5941280491299321" fill="#6a3416" opacity="0.4407590447452109"></circle><circle cx="141.7873351360123" cy="433.9524742253009" r="1.110880448948551" fill="#6a3416" opacity="0.5811084123245971"></circle><circle cx="237.50673739942317" cy="438.11348932667215" r="1.7129792820618424" fill="#6a3416" opacity="0.5394970959915366"></circle><circle cx="241.16616200169798" cy="435.07669280153704" r="0.8759312174376379" fill="#6a3416" opacity="0.48218973045018293"></circle><circle cx="270.7145469519417" cy="432.1076578186002" r="1.2498173421224" fill="#6a3416" opacity="0.4287994894270887"></circle><circle cx="221.38154579023282" cy="435.5554128446913" r="1.2145880318409987" fill="#6a3416" opacity="0.4409151984547255"></circle><circle cx="212.7024073526079" cy="433.7130294428834" r="1.8496728344794624" fill="#6a3416" opacity="0.3782955861069346"></circle><circle cx="222.42802688476445" cy="433.5089922913968" r="1.768154576775151" fill="#6a3416" opacity="0.31077752961498634"></circle></g>
+                <rect id="milkLayer" x="130" y="500" width="160" height="0" fill="url(#milkGrad)" opacity="0"></rect>
+                <g id="latteArt" opacity="0"></g>
+              </g>
+              <ellipse cx="210" cy="311" rx="75" ry="8" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.5"></ellipse>
             </g>
-            <polygon id="radarPoly" points="100,60 140,100 100,140 60,100"
-              fill="#d98b4a" fill-opacity="0.25"
-              stroke="#d98b4a" stroke-width="1.5" />
+            <g id="steamGroup" opacity="0">
+              <path d="M 180,295 Q 175,280 185,265 Q 195,250 185,235" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"></path>
+              <path d="M 210,295 Q 215,278 205,260 Q 195,245 210,225" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"></path>
+              <path d="M 240,295 Q 235,282 245,265 Q 255,250 240,235" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"></path>
+            </g>
           </svg>
         </div>
-      </div>
-    </div>
 
-    <div class="panel">
-      <h2>Diagnosis</h2>
-      <div class="section">
-        <div class="verdict">
-          <div class="head" id="verdictHead">
-            <span class="badge good" id="verdictBadge">Good</span>
-            <span id="verdictTitle">Balanced shot</span>
+        <div class="flow-hint" id="flowHint">BOTTOMLESS · PREVIEW · MOUSE TAIL</div>
+
+        <div class="meters">
+          <div class="meter">
+            <div class="meter-head"><span>Strength</span><span class="score" id="strengthScore">50</span></div>
+            <div class="meter-bar"><div class="meter-fill" id="strengthFill" style="width:50%;background:var(--accent);"></div></div>
           </div>
-          <div id="verdictText" style="color:var(--muted);font-size:12px;">Tweak the controls to see how your shot changes.</div>
+          <div class="meter">
+            <div class="meter-head"><span>Crema</span><span class="score" id="cremaScore">76</span></div>
+            <div class="meter-bar"><div class="meter-fill" id="cremaFill" style="width: 75.5267%; background: var(--crema);"></div></div>
+          </div>
+          <div class="meter">
+            <div class="meter-head"><span>Body</span><span class="score" id="bodyScore">60</span></div>
+            <div class="meter-bar"><div class="meter-fill" id="bodyFill" style="width: 59.5%; background: var(--muted);"></div></div>
+          </div>
+          <div class="meter">
+            <div class="meter-head"><span>Balance</span><span class="score" id="balanceScore">67</span></div>
+            <div class="meter-bar"><div class="meter-fill" id="balanceFill" style="width: 67%; background: var(--warn);"></div></div>
+          </div>
+        </div>
+
+        <div style="width:100%;">
+          <div class="tasting-title" style="text-align:center;margin-bottom:4px;">Taste profile</div>
+          <div class="radar-wrap">
+            <svg viewBox="0 0 200 200">
+              <g stroke="#3a2a20" stroke-width="1" fill="none">
+                <polygon points="100,20 180,100 100,180 20,100"></polygon>
+                <polygon points="100,40 160,100 100,160 40,100"></polygon>
+                <polygon points="100,60 140,100 100,140 60,100"></polygon>
+                <line x1="100" y1="20" x2="100" y2="180"></line>
+                <line x1="20" y1="100" x2="180" y2="100"></line>
+              </g>
+              <g fill="#a89585" font-size="10" font-family="monospace" text-anchor="middle">
+                <text x="100" y="14">SWEET</text>
+                <text x="188" y="103">BITTER</text>
+                <text x="100" y="194">BODY</text>
+                <text x="12" y="103">SOUR</text>
+              </g>
+              <polygon id="radarPoly" points="100,39.760689655172406 120,100 100,155.7 50.49655172413794,100" fill="#d98b4a" fill-opacity="0.25" stroke="#d98b4a" stroke-width="1.5"></polygon>
+            </svg>
+          </div>
         </div>
       </div>
-      <div class="section">
-        <div class="tasting-title">What you'd taste</div>
-        <div class="tasting" id="tastingNotes">—</div>
-      </div>
-      <div class="section">
-        <div id="insights"></div>
-      </div>
-      <div class="section">
-        <div style="margin-bottom:10px;">
-          <label class="switch">
-            <input type="checkbox" id="milkOn" />
-            <span class="track"></span>
-            <span style="font-size:13px;">Add milk</span>
-          </label>
+
+      <!-- RIGHT PANEL -->
+      <div class="panel">
+        <h2>Diagnosis</h2>
+        <div class="section">
+          <div class="verdict">
+            <div class="head" id="verdictHead">
+              <span class="badge warn" id="verdictBadge">OK</span>
+              <span id="verdictTitle">Close to target</span>
+            </div>
+            <div id="verdictText" style="color:var(--muted);font-size:12px;">Near the balanced zone — small tweaks will sharpen it.</div>
+          </div>
         </div>
-        <div class="milk-section" id="milkSection">
-          <div class="control">
-            <label style="display:block;margin-bottom:6px;">Milk type</label>
-            <div class="toggle-group" id="milkTypeGroup">
-              <button data-val="cow" class="active">Cow whole</button>
-              <button data-val="skim">Skim</button>
-              <button data-val="oat">Oat (barista)</button>
+        <div class="section">
+          <div class="tasting-title">What you'd taste</div>
+          <div class="tasting" id="tastingNotes">Notes of cocoa, nut, caramel, medium body, pleasant but could be sweeter with tighter dialing.</div>
+        </div>
+        <div class="section">
+          <div id="insights"><div class="insight "><strong>Clean mouse-tail.</strong> Bottomless proves your prep is solid.</div></div>
+        </div>
+        <div class="section">
+          <div style="margin-bottom:10px;">
+            <label class="switch">
+              <input type="checkbox" id="milkOn">
+              <span class="track"></span>
+              <span style="font-size:13px;">Add milk</span>
+            </label>
+          </div>
+          <div class="milk-section" id="milkSection">
+            <div class="control">
+              <label style="display:block;margin-bottom:6px;">Milk type</label>
+              <div class="toggle-group" id="milkTypeGroup">
+                <button data-val="cow" class="active">Cow whole</button>
+                <button data-val="skim">Skim</button>
+                <button data-val="oat">Oat</button>
+              </div>
+            </div>
+            <div class="control">
+              <div class="control-head"><label>Steam time</label><span class="val" id="steamVal">12 s</span></div>
+              <input type="range" id="steam" min="4" max="25" value="12">
+            </div>
+            <div class="control">
+              <div class="control-head"><label>Target temp</label><span class="val" id="tempVal">62 °C</span></div>
+              <input type="range" id="temp" min="50" max="80" value="62">
+            </div>
+            <div class="control">
+              <label style="display:block;margin-bottom:6px;">Pour technique</label>
+              <div class="toggle-group" id="pourGroup">
+                <button data-val="plain">Plain</button>
+                <button data-val="heart" class="active">Heart</button>
+                <button data-val="rosetta">Rosetta</button>
+                <button data-val="tulip">Tulip</button>
+              </div>
             </div>
           </div>
-          <div class="control">
-            <div class="control-head"><label>Steam time</label><span class="val" id="steamVal">12 s</span></div>
-            <input type="range" id="steam" min="4" max="25" value="12" />
-          </div>
-          <div class="control">
-            <div class="control-head"><label>Target temp</label><span class="val" id="tempVal">62 °C</span></div>
-            <input type="range" id="temp" min="50" max="80" value="62" />
-          </div>
-          <div class="control">
-            <label style="display:block;margin-bottom:6px;">Pour technique</label>
-            <div class="toggle-group" id="pourGroup">
-              <button data-val="plain">Plain</button>
-              <button data-val="heart" class="active">Heart</button>
-              <button data-val="rosetta">Rosetta</button>
-              <button data-val="tulip">Tulip</button>
-            </div>
-          </div>
         </div>
-      </div>
-      <div class="section">
-        <div class="tasting-title">Roadmap</div>
-        <div class="roadmap" id="roadmap"></div>
       </div>
     </div>
   </div>
+
+  <!-- ============================ TECHNIQUES TAB ============================ -->
+  <div class="tab-content" data-tab="techniques">
+    <div class="tech-grid">
+      <!-- HEART -->
+      <div class="tech-card">
+        <h3>Heart</h3>
+        <div class="difficulty">Beginner · the gateway pour</div>
+        <div class="tech-split">
+          <!-- HOW-TO: side view with two jug positions -->
+          <div class="tech-svg-wrap">
+            <div class="tech-label">How to</div>
+            <svg viewBox="0 0 300 160">
+              <defs>
+                <marker id="arrH" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#d98b4a"></polygon>
+                </marker>
+              </defs>
+              <!-- CUP side view -->
+              <path d="M 70,95 Q 70,140 95,145 L 175,145 Q 205,140 205,95 Z" fill="#f2ebe0" stroke="#c8bfae" stroke-width="1.5"></path>
+              <path d="M 205,105 Q 228,108 228,125 Q 228,140 205,138" fill="none" stroke="#c8bfae" stroke-width="2.5"></path>
+              <!-- liquid -->
+              <path d="M 74,98 Q 74,138 96,142 L 174,142 Q 201,138 201,98 Z" fill="#8a5528" opacity="0.75"></path>
+              <ellipse cx="137.5" cy="99" rx="63" ry="3" fill="#c88a4a"></ellipse>
+              <!-- PHASE 1: high jug, ghosted -->
+              <g opacity="0.35">
+                <rect x="30" y="25" width="48" height="30" rx="3" fill="#b8b8b8" stroke="#666" stroke-width="1"></rect>
+                <path d="M 78,30 L 95,27 L 92,42 Z" fill="#b8b8b8" stroke="#666" stroke-width="1"></path>
+                <line x1="93" y1="35" x2="115" y2="97" stroke="#fffaf0" stroke-width="1.8"></line>
+              </g>
+              <text x="54" y="18" text-anchor="middle" fill="#d98b4a" font-size="12" font-weight="bold" font-family="monospace">1.</text>
+              <text x="54" y="72" text-anchor="middle" fill="#a89585" font-size="8" font-family="monospace">FILL HIGH</text>
+              <!-- PHASE 2: low tilted jug -->
+              <g transform="rotate(-18 210 80)">
+                <rect x="190" y="62" width="48" height="30" rx="3" fill="#d0d0d0" stroke="#444" stroke-width="1.2"></rect>
+                <path d="M 238,67 L 256,63 L 252,80 Z" fill="#d0d0d0" stroke="#444" stroke-width="1.2"></path>
+              </g>
+              <line x1="245" y1="95" x2="195" y2="99" stroke="#fffaf0" stroke-width="2"></line>
+              <text x="222" y="58" text-anchor="middle" fill="#d98b4a" font-size="12" font-weight="bold" font-family="monospace">2.</text>
+              <!-- pull-through arrow -->
+              <path d="M 185,90 Q 135,86 95,90" stroke="#d98b4a" stroke-width="1.5" fill="none" stroke-dasharray="3,2" marker-end="url(#arrH)"></path>
+              <text x="140" y="80" text-anchor="middle" fill="#a89585" font-size="8" font-family="monospace">PULL THROUGH</text>
+              <text x="222" y="126" text-anchor="middle" fill="#a89585" font-size="8" font-family="monospace">DROP LOW</text>
+            </svg>
+          </div>
+          <!-- FINAL: top-down heart -->
+          <div class="tech-svg-wrap">
+            <div class="tech-label">Final result</div>
+            <svg viewBox="0 0 300 160">
+              <circle cx="150" cy="80" r="65" fill="#f2ebe0" stroke="#c8bfae" stroke-width="2"></circle>
+              <circle cx="150" cy="80" r="58" fill="#d4a574" opacity="0.6"></circle>
+              <!-- heart -->
+              <path d="M 150,118 C 107,95 103,58 130,52 C 142,50 150,60 150,68 C 150,60 158,50 170,52 C 197,58 193,95 150,118 Z" fill="#fffaf0" stroke="#e8dcc4" stroke-width="0.6"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="tech-steps">
+          <ol>
+            <li><strong>Fill phase (first ⅔):</strong> Hold jug high, pour from ~10 cm directly into centre. The stream punctures the crema and mixes underneath — no white surface yet.</li>
+            <li><strong>Float phase:</strong> When cup is ⅔ full, lower jug to ~1 cm above surface. White milk breaks through and forms a circle.</li>
+            <li><strong>Draw phase:</strong> Let the circle grow into a disk, then lift slightly and pull the stream straight through the middle toward the far side — splits the disk into a heart.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- ROSETTA -->
+      <div class="tech-card">
+        <h3>Rosetta</h3>
+        <div class="difficulty">Intermediate · rhythm is everything</div>
+        <div class="tech-split">
+          <!-- HOW-TO: top-down showing wiggle & walk-back -->
+          <div class="tech-svg-wrap">
+            <div class="tech-label">How to</div>
+            <svg viewBox="0 0 300 160">
+              <defs>
+                <marker id="arrR" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#d98b4a"></polygon>
+                </marker>
+              </defs>
+              <!-- cup top-down -->
+              <circle cx="150" cy="80" r="62" fill="#f2ebe0" stroke="#c8bfae" stroke-width="2"></circle>
+              <circle cx="150" cy="80" r="55" fill="#d4a574" opacity="0.5"></circle>
+              <!-- start dot (far side) -->
+              <circle cx="150" cy="38" r="4" fill="#d98b4a"></circle>
+              <text x="150" y="22" text-anchor="middle" fill="#d98b4a" font-size="10" font-weight="bold" font-family="monospace">1. START FAR</text>
+              <!-- wiggle path as zigzag moving down-and-back -->
+              <path d="M 150,38 L 138,45 L 162,51 L 136,57 L 164,63 L 135,69 L 165,75 L 134,81 L 166,87 L 135,93 L 165,99 L 138,105 L 162,111 L 150,118" stroke="#d98b4a" stroke-width="1.5" fill="none" stroke-dasharray="2,2"></path>
+              <!-- walk-back arrow down the middle -->
+              <path d="M 150,42 L 150,115" stroke="#d98b4a" stroke-width="1" fill="none" opacity="0.4" marker-end="url(#arrR)"></path>
+              <!-- end dot (near side) with pull-through arrow -->
+              <circle cx="150" cy="118" r="4" fill="#d98b4a"></circle>
+              <text x="150" y="148" text-anchor="middle" fill="#d98b4a" font-size="10" font-weight="bold" font-family="monospace">2. PULL THROUGH</text>
+              <text x="240" y="65" text-anchor="middle" fill="#a89585" font-size="9" font-family="monospace">WIGGLE</text>
+              <text x="240" y="77" text-anchor="middle" fill="#a89585" font-size="9" font-family="monospace">SIDE-TO-SIDE</text>
+              <text x="240" y="95" text-anchor="middle" fill="#a89585" font-size="9" font-family="monospace">WHILE</text>
+              <text x="240" y="107" text-anchor="middle" fill="#a89585" font-size="9" font-family="monospace">WALKING BACK</text>
+            </svg>
+          </div>
+          <!-- FINAL: top-down proper rosetta with fanned leaves -->
+          <div class="tech-svg-wrap">
+            <div class="tech-label">Final result</div>
+            <svg viewBox="0 0 300 160">
+              <circle cx="150" cy="80" r="65" fill="#f2ebe0" stroke="#c8bfae" stroke-width="2"></circle>
+              <circle cx="150" cy="80" r="58" fill="#d4a574" opacity="0.6"></circle>
+              <!-- Rosetta leaves: 7 per side, fanned, pivoting at stem (x=150) -->
+              <g fill="#fffaf0">
+                <!-- RIGHT SIDE -->
+                <ellipse cx="164" cy="38" rx="12" ry="2.5" transform="rotate(-32 150 38)"></ellipse>
+                <ellipse cx="170" cy="52" rx="17" ry="2.8" transform="rotate(-20 150 52)"></ellipse>
+                <ellipse cx="175" cy="66" rx="21" ry="3" transform="rotate(-10 150 66)"></ellipse>
+                <ellipse cx="178" cy="80" rx="24" ry="3" transform="rotate(0 150 80)"></ellipse>
+                <ellipse cx="175" cy="94" rx="21" ry="3" transform="rotate(10 150 94)"></ellipse>
+                <ellipse cx="170" cy="108" rx="17" ry="2.8" transform="rotate(20 150 108)"></ellipse>
+                <ellipse cx="164" cy="122" rx="12" ry="2.5" transform="rotate(32 150 122)"></ellipse>
+                <!-- LEFT SIDE (mirror) -->
+                <ellipse cx="136" cy="38" rx="12" ry="2.5" transform="rotate(32 150 38)"></ellipse>
+                <ellipse cx="130" cy="52" rx="17" ry="2.8" transform="rotate(20 150 52)"></ellipse>
+                <ellipse cx="125" cy="66" rx="21" ry="3" transform="rotate(10 150 66)"></ellipse>
+                <ellipse cx="122" cy="80" rx="24" ry="3" transform="rotate(0 150 80)"></ellipse>
+                <ellipse cx="125" cy="94" rx="21" ry="3" transform="rotate(-10 150 94)"></ellipse>
+                <ellipse cx="130" cy="108" rx="17" ry="2.8" transform="rotate(-20 150 108)"></ellipse>
+                <ellipse cx="136" cy="122" rx="12" ry="2.5" transform="rotate(-32 150 122)"></ellipse>
+              </g>
+              <!-- Central stem pulled through (more prominent) -->
+              <line x1="150" y1="30" x2="150" y2="132" stroke="#fffaf0" stroke-width="3" stroke-linecap="round"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="tech-steps">
+          <ol>
+            <li><strong>Fill high:</strong> Punch through the crema in the centre, filling to about ⅔. Crema and milk mix, no white yet.</li>
+            <li><strong>Drop low, start wiggling:</strong> Get the spout right on the surface at the far side of the cup. Start a side-to-side wrist wiggle — fast, small amplitude, metronomic. White "leaves" appear.</li>
+            <li><strong>Walk back:</strong> Slowly move your hand toward yourself while wiggling. Each new leaf pushes the previous ones outward, fanning them into the rosetta shape.</li>
+            <li><strong>Pull through:</strong> Lift the jug slightly and drag a thin line straight through the whole length. That's the stem that defines the rosetta.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- TULIP -->
+      <div class="tech-card">
+        <h3>Tulip</h3>
+        <div class="difficulty">Intermediate · stack discipline</div>
+        <div class="tech-split">
+          <!-- HOW-TO: top-down showing pulse positions -->
+          <div class="tech-svg-wrap">
+            <div class="tech-label">How to</div>
+            <svg viewBox="0 0 300 160">
+              <defs>
+                <marker id="arrT" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#d98b4a"></polygon>
+                </marker>
+              </defs>
+              <circle cx="150" cy="80" r="62" fill="#f2ebe0" stroke="#c8bfae" stroke-width="2"></circle>
+              <circle cx="150" cy="80" r="55" fill="#d4a574" opacity="0.5"></circle>
+              <!-- 3 pulse positions (top to bottom) with jump arrows -->
+              <circle cx="150" cy="38" r="7" fill="#fffaf0" opacity="0.85"></circle>
+              <text x="150" y="42" text-anchor="middle" fill="#d98b4a" font-size="9" font-weight="bold" font-family="monospace">1</text>
+              <path d="M 150,46 L 150,58" stroke="#d98b4a" stroke-width="1.2" stroke-dasharray="2,2" fill="none" marker-end="url(#arrT)"></path>
+              <text x="178" y="55" fill="#a89585" font-size="8" font-family="monospace">STOP</text>
+              <text x="178" y="65" fill="#a89585" font-size="8" font-family="monospace">MOVE</text>
+
+              <circle cx="150" cy="68" r="9" fill="#fffaf0" opacity="0.85"></circle>
+              <text x="150" y="72" text-anchor="middle" fill="#d98b4a" font-size="9" font-weight="bold" font-family="monospace">2</text>
+              <path d="M 150,78 L 150,90" stroke="#d98b4a" stroke-width="1.2" stroke-dasharray="2,2" fill="none" marker-end="url(#arrT)"></path>
+              <text x="178" y="85" fill="#a89585" font-size="8" font-family="monospace">PULSE</text>
+
+              <circle cx="150" cy="102" r="11" fill="#fffaf0" opacity="0.85"></circle>
+              <text x="150" y="106" text-anchor="middle" fill="#d98b4a" font-size="9" font-weight="bold" font-family="monospace">3</text>
+              <!-- pull-through final -->
+              <path d="M 150,38 L 150,135" stroke="#d98b4a" stroke-width="1.2" fill="none" opacity="0.3"></path>
+              <text x="150" y="150" text-anchor="middle" fill="#d98b4a" font-size="9" font-weight="bold" font-family="monospace">4. PULL THROUGH</text>
+              <text x="60" y="42" fill="#a89585" font-size="8" font-family="monospace">FAR</text>
+              <text x="60" y="135" fill="#a89585" font-size="8" font-family="monospace">NEAR</text>
+            </svg>
+          </div>
+          <!-- FINAL: top-down proper tulip -->
+          <div class="tech-svg-wrap">
+            <div class="tech-label">Final result</div>
+            <svg viewBox="0 0 300 160">
+              <circle cx="150" cy="80" r="65" fill="#f2ebe0" stroke="#c8bfae" stroke-width="2"></circle>
+              <circle cx="150" cy="80" r="58" fill="#d4a574" opacity="0.6"></circle>
+              <!-- Layered tulip petals — each a smooth teardrop, stacked -->
+              <!-- Outer petal (largest, at near side) -->
+              <path d="M 150,135 C 108,128 100,100 110,78 C 122,58 178,58 190,78 C 200,100 192,128 150,135 Z" fill="#fffaf0"></path>
+              <!-- Middle petal -->
+              <path d="M 150,108 C 122,100 116,78 124,60 C 132,48 168,48 176,60 C 184,78 178,100 150,108 Z" fill="#f3e5cb" stroke="#e8dcc4" stroke-width="0.4"></path>
+              <!-- Inner petal (smallest) -->
+              <path d="M 150,80 C 132,74 128,58 134,46 C 139,38 161,38 166,46 C 172,58 168,74 150,80 Z" fill="#e6d4b3" stroke="#d8c7a6" stroke-width="0.4"></path>
+              <!-- Top cap -->
+              <ellipse cx="150" cy="36" rx="7" ry="5" fill="#d9c6a3"></ellipse>
+              <!-- Pull-through stem line (subtle, through the middle) -->
+              <line x1="150" y1="32" x2="150" y2="134" stroke="#8a7859" stroke-width="0.8" opacity="0.5"></line>
+            </svg>
+          </div>
+        </div>
+        <div class="tech-steps">
+          <ol>
+            <li><strong>Fill phase:</strong> Same as heart — high pour through the centre, mix everything up until cup is ⅔ full.</li>
+            <li><strong>First blob (far side):</strong> Drop low at the far edge and let a round white blob form.</li>
+            <li><strong>Stop, move, restart:</strong> Briefly pause the pour, move the spout 1–2 cm toward yourself, restart — a new blob pushes the first one forward.</li>
+            <li><strong>Repeat 2–4 times:</strong> Each pulse stacks in front of the last. More pulses = more layered tulip.</li>
+            <li><strong>Pull through:</strong> Finish by lifting and dragging a thin line through all the layers to unify them.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- PLAIN POUR -->
+      <div class="tech-card">
+        <h3>Plain pour</h3>
+        <div class="difficulty">Starter · the texture test</div>
+        <div class="tech-split">
+          <!-- HOW-TO: side view, high-held jug -->
+          <div class="tech-svg-wrap">
+            <div class="tech-label">How to</div>
+            <svg viewBox="0 0 300 160">
+              <!-- cup side view -->
+              <path d="M 80,100 Q 80,140 105,145 L 175,145 Q 200,140 200,100 Z" fill="#f2ebe0" stroke="#c8bfae" stroke-width="1.5"></path>
+              <path d="M 200,108 Q 222,112 222,125 Q 222,140 200,138" fill="none" stroke="#c8bfae" stroke-width="2.5"></path>
+              <path d="M 84,103 Q 84,138 105,142 L 175,142 Q 196,138 196,103 Z" fill="#8a5528" opacity="0.75"></path>
+              <ellipse cx="140" cy="104" rx="56" ry="3" fill="#c88a4a"></ellipse>
+              <!-- Jug high -->
+              <g transform="rotate(-12 140 30)">
+                <rect x="110" y="15" width="52" height="32" rx="3" fill="#d0d0d0" stroke="#444" stroke-width="1.2"></rect>
+                <path d="M 162,22 L 182,18 L 178,35 Z" fill="#d0d0d0" stroke="#444" stroke-width="1.2"></path>
+              </g>
+              <!-- thick stream straight down -->
+              <line x1="170" y1="40" x2="138" y2="103" stroke="#fffaf0" stroke-width="2.5"></line>
+              <text x="140" y="12" text-anchor="middle" fill="#d98b4a" font-size="11" font-weight="bold" font-family="monospace">KEEP HIGH</text>
+              <text x="60" y="62" text-anchor="middle" fill="#a89585" font-size="9" font-family="monospace">~10 CM</text>
+              <text x="60" y="74" text-anchor="middle" fill="#a89585" font-size="9" font-family="monospace">THROUGHOUT</text>
+              <!-- don't-drop-low X -->
+              <g opacity="0.5">
+                <line x1="225" y1="60" x2="250" y2="85" stroke="#d9534f" stroke-width="2"></line>
+                <line x1="250" y1="60" x2="225" y2="85" stroke="#d9534f" stroke-width="2"></line>
+              </g>
+              <text x="237" y="100" text-anchor="middle" fill="#d9534f" font-size="8" font-family="monospace">NEVER</text>
+              <text x="237" y="110" text-anchor="middle" fill="#d9534f" font-size="8" font-family="monospace">DROP LOW</text>
+            </svg>
+          </div>
+          <!-- FINAL: top-down white circle -->
+          <div class="tech-svg-wrap">
+            <div class="tech-label">Final result</div>
+            <svg viewBox="0 0 300 160">
+              <circle cx="150" cy="80" r="65" fill="#f2ebe0" stroke="#c8bfae" stroke-width="2"></circle>
+              <circle cx="150" cy="80" r="58" fill="#d4a574" opacity="0.6"></circle>
+              <!-- White round pool in center -->
+              <circle cx="150" cy="80" r="22" fill="#fffaf0"></circle>
+              <!-- subtle gloss -->
+              <ellipse cx="145" cy="74" rx="10" ry="4" fill="#fff" opacity="0.4"></ellipse>
+            </svg>
+          </div>
+        </div>
+        <div class="tech-steps">
+          <ol>
+            <li><strong>Pour from height</strong> straight into the centre, keeping the jug ~10 cm above the cup the entire time.</li>
+            <li><strong>Don't drop low.</strong> Never bring the spout close to the surface — no design is attempted on this pour.</li>
+            <li><strong>Read the result:</strong> A neat white circle forming at the end means your microfoam is good. If it disappears or bubbles surface, your texturing needs work before attempting art.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- STEAMING -->
+      <div class="tech-card">
+        <h3>Milk texturing (the prerequisite)</h3>
+        <div class="difficulty">Foundation · without this, no art</div>
+        <div class="tech-svg-wrap">
+          <svg viewBox="0 0 300 180">
+            <!-- side view jug -->
+            <path d="M 60,50 L 60,150 Q 60,160 75,160 L 140,160 Q 155,160 155,150 L 155,50 Z" fill="#d0d0d0" stroke="#888" stroke-width="1.5"></path>
+            <path d="M 155,70 L 175,60 L 170,80 Z" fill="#d0d0d0" stroke="#888" stroke-width="1.5"></path>
+            <!-- milk inside -->
+            <path d="M 65,70 L 65,150 Q 65,155 75,155 L 140,155 Q 150,155 150,150 L 150,70 Z" fill="#fffaf0"></path>
+            <!-- steam wand -->
+            <rect x="195" y="30" width="6" height="80" fill="#888"></rect>
+            <rect x="192" y="105" width="12" height="14" fill="#666"></rect>
+            <circle cx="198" cy="115" r="1.5" fill="#1a0a04"></circle>
+            <!-- wand tip INSIDE milk just below surface -->
+            <line x1="198" y1="115" x2="198" y2="95" stroke="#fff" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.6"></line>
+            <!-- whirlpool swirl -->
+            <path d="M 100,100 Q 120,110 115,125 Q 105,135 95,125 Q 90,115 100,100" stroke="#d98b4a" stroke-width="1.5" fill="none" marker-end="url(#arrowhead)"></path>
+            <text x="107" y="85" text-anchor="middle" fill="#a89585" font-size="9" font-family="monospace">WHIRLPOOL</text>
+            <text x="225" y="75" fill="#a89585" font-size="9" font-family="monospace">3–4s air</text>
+            <text x="225" y="90" fill="#a89585" font-size="9" font-family="monospace">then submerge</text>
+            <text x="225" y="105" fill="#a89585" font-size="9" font-family="monospace">to texture</text>
+          </svg>
+        </div>
+        <div class="tech-steps">
+          <ol>
+            <li><strong>Fill the jug ⅓ full</strong> of cold milk straight from the fridge. Cold milk = more time to texture before it overheats.</li>
+            <li><strong>Purge the wand</strong> first to clear condensation.</li>
+            <li><strong>Air phase (3–4 seconds):</strong> Position the tip just below the surface. You should hear a controlled "paper-tearing" sound — that's air being introduced. Too deep = no air; too shallow = screaming + big bubbles.</li>
+            <li><strong>Texture phase:</strong> Submerge the tip ~1 cm below surface, off-centre. The milk spins into a whirlpool that incorporates the air into micro-sized bubbles. Silence is good — roaring means you're still pulling air.</li>
+            <li><strong>Stop at ~60 °C.</strong> Jug becomes uncomfortably hot to hold. Over 70 °C kills the foam.</li>
+            <li><strong>Bang and swirl:</strong> Tap the jug hard on the counter to pop large bubbles, then swirl to polish. Milk should look like wet paint — glossy, seamless, moving as one.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- TROUBLESHOOTING -->
+      <div class="tech-card">
+        <h3>Common failures</h3>
+        <div class="difficulty">Diagnostic · when art doesn't appear</div>
+        <div class="tech-steps">
+          <ol>
+            <li><strong>White sinks immediately:</strong> Foam is too thin, no body. Steam longer / introduce more air at start.</li>
+            <li><strong>Pattern blurs as you pour:</strong> Milk is too thick, or crema is weak. Polish more, or dial in your espresso shot first.</li>
+            <li><strong>Big bubbles on surface:</strong> Air introduced too late or too aggressively. Bang the jug harder before pouring.</li>
+            <li><strong>Design wobbles / streaks:</strong> Inconsistent flow rate from the spout. Keep your wrist and forearm locked, move only the hand.</li>
+            <li><strong>Rosetta has no leaves:</strong> Wiggle too slow, or spout too far from surface.</li>
+            <li><strong>Heart isn't symmetrical:</strong> You dragged the line at an angle. Pull straight through the axis of the cup.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ MAINTENANCE TAB ============================ -->
+  <div class="tab-content" data-tab="maintenance">
+    <div class="maint-grid">
+      <div class="maint-card">
+        <span class="freq daily">Daily</span>
+        <h3>After every session</h3>
+        <ol class="steps">
+          <li>Purge the steam wand for 1–2 seconds to clear any milk inside the tip.</li>
+          <li>Wipe the steam wand immediately with a damp cloth while still warm — cold milk residue is nearly impossible to remove later.</li>
+          <li>Knock out the puck, rinse the portafilter and basket under hot water.</li>
+          <li>Wipe the group-head gasket and shower screen with a soft cloth or brush.</li>
+          <li>Empty and rinse the drip tray and grinds bin if they're getting full.</li>
+          <li>Wipe the machine exterior and the heated cup rest.</li>
+        </ol>
+        <div class="note"><strong>Why it matters:</strong> Milk residue inside the steam wand cooks into a hard deposit and can clog the tip. Wet coffee grounds left on the group-head gasket dry and crack the rubber over time.</div>
+      </div>
+
+      <div class="maint-card">
+        <span class="freq weekly">Weekly</span>
+        <h3>Group-head soak</h3>
+        <ol class="steps">
+          <li>Insert the cleaning disc (rubber blanking disc) into the single-wall basket.</li>
+          <li>Add a small amount of espresso machine cleaner (Cafiza or similar) on top of the disc.</li>
+          <li>Lock the portafilter into the group head.</li>
+          <li>Run a short manual shot — water pools against the disc and soaks the shower screen.</li>
+          <li>Remove portafilter and rinse thoroughly. Run clean water through the group head a couple of times to flush residue.</li>
+          <li>Remove the shower screen (if accessible) and soak separately in warm cleaner solution for 10 minutes, then reinstall.</li>
+        </ol>
+        <div class="note"><strong>Note:</strong> The Barista Pro doesn't have a 3-way solenoid valve, so traditional backflushing isn't possible. The blanking-disc soak is the equivalent routine.</div>
+      </div>
+
+      <div class="maint-card">
+        <span class="freq weekly">Weekly</span>
+        <h3>Steam wand deep clean</h3>
+        <ol class="steps">
+          <li>Fill a small cup with warm water and a drop of steam wand cleaner.</li>
+          <li>Submerge the steam tip and let it soak 10–15 minutes — dissolves hardened milk.</li>
+          <li>Unscrew the steam tip (once the machine is cool) and clear each hole with the supplied pin or a paperclip.</li>
+          <li>Rinse under hot water, reattach firmly, and purge with steam to clear the internal tube.</li>
+        </ol>
+      </div>
+
+      <div class="maint-card">
+        <span class="freq alert">CLEAN ME light</span>
+        <h3>Automatic clean cycle</h3>
+        <ol class="steps">
+          <li>Drop a cleaning tablet into the single-wall basket with the rubber cleaning disc on top.</li>
+          <li>Lock the portafilter into the group head.</li>
+          <li>Make sure the drip tray is empty and the water tank is full.</li>
+          <li>With the machine on, press and hold 1 CUP, 2 CUP, and POWER simultaneously.</li>
+          <li>The machine runs an automatic 5-minute clean cycle — do not interrupt.</li>
+          <li>When finished, remove the portafilter, discard the residue, and rinse everything thoroughly.</li>
+          <li>Run a couple of blank shots through the group head to flush any remaining cleaner.</li>
+        </ol>
+        <div class="note"><strong>Triggered by:</strong> A fixed shot count (around 200 shots). Don't ignore the warning — cleaner buildup in the group affects taste.</div>
+      </div>
+
+      <div class="maint-card">
+        <span class="freq alert">DESCALE light</span>
+        <h3>Descaling cycle</h3>
+        <ol class="steps">
+          <li>Empty the drip tray and remove the water filter from the tank.</li>
+          <li>Fill the water tank with descaling solution mixed per the product instructions (typically citric-acid or commercial descaler + water).</li>
+          <li>With the machine off, press and hold the POWER button until the descale menu appears, then start the cycle.</li>
+          <li>The machine alternates between flushing water through the group head and the steam/hot-water circuits. Keep a large vessel under each outlet.</li>
+          <li>When prompted, empty the tank, refill with fresh water, and run the rinse cycle — this is critical to flush out any remaining descaler.</li>
+          <li>Reinstall the water filter and wipe everything down.</li>
+        </ol>
+        <div class="note"><strong>Why:</strong> Limescale builds up on heating element and boiler walls, insulates the element, makes it work harder, reduces lifespan, and tastes awful. Frequency depends on water hardness — harder water = descale more often.</div>
+      </div>
+
+      <div class="maint-card">
+        <span class="freq monthly">Monthly</span>
+        <h3>Grinder hopper &amp; burrs</h3>
+        <ol class="steps">
+          <li>Grind through any remaining beans in the hopper until empty.</li>
+          <li>Remove the hopper, wipe it clean of coffee oils with a dry cloth. Avoid water unless thoroughly dried — moisture in the grinder is bad.</li>
+          <li>Run the machine with the empty hopper for a few seconds to eject any retained grounds.</li>
+          <li>For a deeper clean every few months, grind a small handful of grinder cleaning tablets (Grindz or similar) through the burrs, followed by a few grams of coffee to purge residue.</li>
+          <li>Brush out the grind chute with the supplied brush.</li>
+        </ol>
+        <div class="note"><strong>Retention reminder:</strong> Every time you change grind size, the first few grams are still at the old setting. Purge 2 g before a shot after adjustments — or accept that the first shot is a throwaway.</div>
+      </div>
+
+      <div class="maint-card">
+        <span class="freq monthly">Every 3 months</span>
+        <h3>Water filter replacement</h3>
+        <ol class="steps">
+          <li>Soak the new filter cartridge in cold water for 5 minutes to activate.</li>
+          <li>Rinse under running cold water for 5 seconds to flush loose carbon particles.</li>
+          <li>Reset the date indicator on the filter holder to three months from today.</li>
+          <li>Insert the filter firmly into its holder in the water tank.</li>
+          <li>Refill the tank and run one blank water cycle through the group head to prime.</li>
+        </ol>
+        <div class="note"><strong>Why:</strong> The carbon filter reduces chlorine and some scale-causing minerals. Expired filters do neither, and chlorinated water dulls flavour significantly.</div>
+      </div>
+
+      <div class="maint-card">
+        <span class="freq monthly">As needed</span>
+        <h3>Drip tray &amp; grinds bin</h3>
+        <ol class="steps">
+          <li>Empty the drip tray when the red "EMPTY ME" indicator floats above the grille.</li>
+          <li>Wash the drip tray and grille in warm soapy water. Rinse thoroughly.</li>
+          <li>Empty the knock box / grinds container into compost or bin — wet grounds mould quickly.</li>
+          <li>Dry completely before reinstalling — standing water invites bacteria and smells.</li>
+        </ol>
+      </div>
+
+      <div class="maint-card">
+        <span class="freq daily">Every shot</span>
+        <h3>Group flush (the one most people skip)</h3>
+        <ol class="steps">
+          <li>Before locking the portafilter in, run a 1–2 second manual flush through the group head.</li>
+          <li>This clears any old grounds clinging to the shower screen and stabilises the group temperature.</li>
+          <li>Wipe the gasket area with a dry cloth.</li>
+          <li>Now dose, distribute, tamp and lock in.</li>
+        </ol>
+        <div class="note"><strong>Why:</strong> Old grounds left on the shower screen introduce stale bitter flavours into a fresh shot. A two-second flush costs nothing and noticeably improves taste.</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
+// ============== STATE ==============
 const state = {
+  roast: "medium", origin: "blend", fresh: 14,
   grind: 11, dose: 18, tamp: 30, pre: 7, time: 28, yield: 36,
-  waterTemp: 93, fresh: 14,
+  waterTemp: 93, profile: "flat",
   pf: "bottomless", basket: "double",
   milk: false, milkType: "cow", steam: 12, temp: 62, pour: "heart",
+  // grinder retention
+  lastShotGrind: 11, grindChanged: false,
+  // animation
+  animating: false, animProgress: 0, animStart: 0,
 };
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 
+// ============== ORIGIN & ROAST PROFILES ==============
+const ROASTS = {
+  light:  { tempShift: 1.5,  timeShift: 2,   extShift: -0.01, grindShift: -1, cremaBase: -0.05, sweetBias: 0.1,  sourBias: 0.15, bitterBias: -0.1, bodyBias: -0.1 },
+  medium: { tempShift: 0,    timeShift: 0,   extShift: 0,     grindShift: 0,  cremaBase: 0,     sweetBias: 0,    sourBias: 0,    bitterBias: 0,    bodyBias: 0 },
+  dark:   { tempShift: -2,   timeShift: -1,  extShift: 0.01,  grindShift: 1,  cremaBase: 0.05,  sweetBias: -0.05, sourBias: -0.15, bitterBias: 0.15, bodyBias: 0.15 },
+};
+
+const ORIGINS = {
+  blend:      { notes: ["cocoa","nut","caramel"],                   sweet: 0,   sour: 0,    bitter: 0,    body: 0    },
+  ethiopian:  { notes: ["jasmine","bergamot","citrus","stone fruit"], sweet: 0.1, sour: 0.2,  bitter: -0.1, body: -0.1 },
+  colombian:  { notes: ["caramel","toffee","red apple"],            sweet: 0.15,sour: 0.05, bitter: -0.05,body: 0    },
+  brazilian:  { notes: ["milk chocolate","almond","peanut"],        sweet: 0.1, sour: -0.1, bitter: -0.05,body: 0.15 },
+  kenyan:     { notes: ["blackcurrant","wine","tomato"],            sweet: 0,   sour: 0.2,  bitter: 0,    body: 0.05 },
+  sumatran:   { notes: ["earth","cedar","dark spice","tobacco"],    sweet: -0.05,sour: -0.1, bitter: 0.1,  body: 0.2  },
+  guatemalan: { notes: ["dark cocoa","nutmeg","orange zest"],       sweet: 0.05,sour: 0.05, bitter: 0.05, body: 0.1  },
+};
+
+// ============== MODEL ==============
 function evaluate() {
   const s = state;
+  const roast = ROASTS[s.roast];
+  const origin = ORIGINS[s.origin];
+
   const ratio = s.yield / s.dose;
-  const idealTime = lerp(38, 14, (s.grind - 1) / 29);
+  // Ideal time shifts with roast (darker = shorter ideal)
+  const idealTime = lerp(38, 14, (s.grind - 1) / 29) + roast.timeShift;
   const timeDelta = s.time - idealTime;
   const timeOffset = timeDelta / 10;
+
   const tooFine = Math.max(0, (8 - s.grind) / 8);
   const tooCoarse = Math.max(0, (s.grind - 22) / 8);
   const tampOffset = (s.tamp - 31) / 20;
-  const waterOffset = (s.waterTemp - 93) / 3;
+  // Optimal water temp also shifts with roast (light needs hotter)
+  const waterOffset = (s.waterTemp - (93 + roast.tempShift)) / 3;
 
   let freshness;
   if (s.fresh < 4) freshness = s.fresh / 4 * 0.6 + 0.2;
@@ -377,30 +1076,54 @@ function evaluate() {
 
   const preBonus = clamp(s.pre / 8, 0, 1);
 
+  // Pressure profile effects
+  let profileChannelReduction = 0;
+  let profileExtraction = 0;
+  if (s.profile === "ramp") { profileChannelReduction = 0.3; profileExtraction = 0.002; }
+  else if (s.profile === "decline") { profileExtraction = 0.005; }
+
   let ext = 0.18 + (s.time - 28) * 0.003 + (15 - s.grind) * 0.002
-    + Math.max(0, tampOffset) * 0.01 + (ratio - 2) * 0.008 + waterOffset * 0.008;
+    + Math.max(0, tampOffset) * 0.01 + (ratio - 2) * 0.008
+    + waterOffset * 0.008 + roast.extShift + profileExtraction;
   ext = clamp(ext, 0.10, 0.30);
   const extGap = ext - 0.21;
   const balance = clamp(1 - Math.abs(extGap) * 15, 0, 1);
 
-  let strength = clamp(0.5 + (2 - ratio) * 0.18 + (s.dose - 18) * 0.015 + (s.time - 28) * 0.005, 0, 1);
+  // Grinder retention penalty
+  const retentionPenalty = s.grindChanged ? 0.15 : 0;
+
+  let strength = clamp(
+    0.5 + (2 - ratio) * 0.18 + (s.dose - 18) * 0.015 + (s.time - 28) * 0.005
+    - retentionPenalty * 0.2, 0, 1
+  );
 
   let body = clamp(
     0.55 + (s.dose - 18) * 0.02 + (2 - ratio) * 0.1
     - Math.abs(tampOffset) * 0.1 - tooCoarse * 0.3
-    + freshness * 0.1 - 0.05, 0, 1
+    + freshness * 0.1 - 0.05 + roast.bodyBias * 0.3, 0, 1
   );
 
   let crema = clamp(
-    0.3 + freshness * 0.45
+    0.3 + freshness * 0.45 + roast.cremaBase
     - Math.abs(timeOffset) * 0.2 - Math.abs(tampOffset) * 0.08 - tooCoarse * 0.3
     + (s.pf === "stock" ? 0.15 : 0)
-    - tooFine * 0.15 + preBonus * 0.05, 0, 1
+    - tooFine * 0.15 + preBonus * 0.05
+    - retentionPenalty * 0.3, 0, 1
   );
 
+  // Under-dosed triple = headspace / uneven puck; overloaded single = puck hits screen
+  const basketMismatch =
+    (s.basket === "single" && s.dose > 10) ? 0.35 :
+    (s.basket === "triple" && s.dose < 19) ? 0.22 : 0;
+  // Asymmetric tamp: light tamp is very risky, heavy tamp barely matters until extreme
+  const tampPenalty = tampOffset < 0
+    ? Math.abs(tampOffset) * 0.5
+    : Math.max(0, tampOffset - 0.2) * 0.2;
   const channeling = clamp(
-    (tooFine * 0.5 + Math.abs(tampOffset) * 0.3 + Math.max(0, -timeOffset) * 0.1)
-    * (1 - preBonus * 0.5), 0, 1
+    ((tooFine * 0.5 + tampPenalty + Math.max(0, -timeOffset) * 0.25 + basketMismatch)
+    * (1 - preBonus * 0.25)
+    * (1 - profileChannelReduction))
+    + retentionPenalty * 0.3, 0, 1
   );
 
   let extTag = "balanced";
@@ -409,117 +1132,266 @@ function evaluate() {
 
   const sour = clamp(
     Math.max(0, -extGap) * 20 + Math.max(0, -waterOffset) * 0.25
-    + Math.max(0, -timeOffset) * 0.3, 0, 1
+    + Math.max(0, -timeOffset) * 0.3 + roast.sourBias + origin.sour, 0, 1
   );
   const bitter = clamp(
     Math.max(0, extGap) * 20 + Math.max(0, waterOffset) * 0.25
-    + Math.max(0, timeOffset) * 0.25, 0, 1
+    + Math.max(0, timeOffset) * 0.25 + roast.bitterBias + origin.bitter, 0, 1
   );
-  const sweet = clamp(balance * 0.7 + freshness * 0.3 - (sour + bitter) * 0.2, 0, 1);
+  const sweet = clamp(
+    balance * 0.7 + freshness * 0.3 - (sour + bitter) * 0.2
+    + roast.sweetBias + origin.sweet, 0, 1
+  );
+  const bodyTaste = clamp(body + origin.body, 0, 1);
 
   const flowSpeed = clamp(s.yield / s.time / 2.5, 0.3, 1.8);
 
   const perfect =
     balance > 0.88 && crema > 0.7 && channeling < 0.15
-    && freshness > 0.85 && Math.abs(ratio - 2) < 0.25;
+    && freshness > 0.85 && Math.abs(ratio - 2) < 0.25
+    && !s.grindChanged;
 
   return {
     ratio, ext, extGap, extTag, balance, strength, body, crema,
     channeling, idealTime, timeDelta, flowSpeed,
     tooFine, tooCoarse, tampOffset, waterOffset,
-    freshness, preBonus,
-    sour, bitter, sweet, bodyTaste: body, perfect,
+    freshness, preBonus, retentionPenalty,
+    sour, bitter, sweet, bodyTaste, perfect, origin, roast: s.roast,
   };
 }
 
-function renderVis(ev) {
+// ============== PRESSURE PROFILE ==============
+function getPressureAtFraction(profile, pre, time, f) {
+  // f is 0..1 of total shot progress (including pre-inf)
+  // Pre-infusion occupies first (pre / (pre+time)) of f
+  const preFraction = pre / (pre + time);
+
+  if (f < preFraction) {
+    // Pre-infusion: gentle ~3 bar
+    return 3 + (f / preFraction) * 1;
+  }
+  const g = (f - preFraction) / (1 - preFraction); // 0..1 within main shot
+
+  switch (profile) {
+    case "flat":
+      return 9;
+    case "ramp":
+      return g < 0.3 ? lerp(4, 9, g / 0.3) : 9;
+    case "decline":
+      return g < 0.15 ? lerp(6, 10, g / 0.15) : lerp(10, 6.5, (g - 0.15) / 0.85);
+    default:
+      return 9;
+  }
+}
+
+function renderPressureChart(animFraction = -1) {
+  const s = state;
+  const w = 300, h = 100;
+  const samples = 60;
+  let points = [];
+  for (let i = 0; i <= samples; i++) {
+    const f = i / samples;
+    const p = getPressureAtFraction(s.profile, s.pre, s.time, f);
+    const x = f * w;
+    // 0 bar at y=100, 10 bar at y=10 (scale so 9 bar ~ y=20)
+    const y = h - (p / 10) * (h - 10) - 5;
+    points.push([x, y]);
+  }
+  const path = "M " + points.map(p => p.join(",")).join(" L ") + ` L ${w},${h} L 0,${h} Z`;
+  $("profilePath").setAttribute("d", path);
+
+  // Cursor during animation
+  const cursor = $("profileCursor");
+  if (animFraction >= 0 && animFraction <= 1) {
+    cursor.setAttribute("x1", animFraction * w);
+    cursor.setAttribute("x2", animFraction * w);
+    cursor.setAttribute("opacity", 1);
+  } else {
+    cursor.setAttribute("opacity", 0);
+  }
+
+  // Labels
+  const names = { flat: "Flat 9-bar", ramp: "Ramp", decline: "Decline" };
+  $("profileName").textContent = names[s.profile];
+  $("profileTime").textContent = (s.pre + s.time) + "s";
+  const peaks = { flat: "9.0 bar", ramp: "9.0 bar", decline: "10.0 bar" };
+  $("profilePeak").textContent = peaks[s.profile];
+}
+
+// ============== RENDER: STAGE ==============
+function renderVis(ev, animFraction = 1) {
   const s = state;
   $("stockSpouts").style.display = s.pf === "stock" ? "" : "none";
   $("bottomlessBasket").style.display = s.pf === "bottomless" ? "" : "none";
-  $("stageSvg").classList.toggle("perfect", ev.perfect);
-  $("perfectBadge").classList.toggle("on", ev.perfect);
+  // Perfect glow only when not animating
+  const showPerfect = ev.perfect && !s.animating;
+  $("stageSvg").classList.toggle("perfect", showPerfect);
+  $("perfectBadge").classList.toggle("on", showPerfect);
 
+  // FLOW — render during active animation AND as a preview when idle
   const flow = $("flowGroup");
   flow.innerHTML = "";
-  const flowStartY = s.pf === "stock" ? 128 : 113;
-  const flowEndY = 390;
+  const showFlow = s.animating ? (animFraction > 0 && animFraction < 1) : true;
+  if (showFlow) {
+    const flowStartY = s.pf === "stock" ? 128 : 113;
+    const flowEndY = 390;
+    // Pressure: use current animation fraction if animating, otherwise a
+    // mid-extraction value (0.6) so pressure-profile effects are visible in preview
+    const fForPressure = s.animating ? animFraction : 0.6;
+    const p = getPressureAtFraction(s.profile, s.pre, s.time, fForPressure);
+    const pressureFactor = clamp(p / 9, 0.2, 1.1);
 
-  if (s.pf === "stock") {
-    const streams = [190, 230];
-    streams.forEach((x, i) => {
-      const width = 1.2 + ev.flowSpeed * 0.6;
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", `M ${x},${flowStartY} Q ${x + (i === 0 ? -1 : 1)},${(flowStartY + flowEndY) / 2} ${x},${flowEndY}`);
-      path.setAttribute("stroke", "url(#flowGrad)");
-      path.setAttribute("stroke-width", width);
-      path.setAttribute("fill", "none");
-      path.setAttribute("opacity", "0.9");
-      flow.appendChild(path);
-    });
-  } else {
-    const baseWidth = 3 + ev.flowSpeed * 2;
-    if (ev.channeling > 0.35) {
-      const spread = 20;
-      for (let i = 0; i < 4; i++) {
-        const xOff = (i - 1.5) * (spread * ev.channeling);
+    if (s.pf === "stock") {
+      const streams = [190, 230];
+      streams.forEach((x, i) => {
+        const width = (1.2 + ev.flowSpeed * 0.6) * pressureFactor;
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", `M ${210 + xOff * 0.4},${flowStartY + i} Q ${210 + xOff},${(flowStartY + flowEndY) / 2} ${210 + xOff * 0.6},${flowEndY}`);
+        path.setAttribute("d", `M ${x},${flowStartY} Q ${x + (i === 0 ? -1 : 1)},${(flowStartY + flowEndY) / 2} ${x},${flowEndY}`);
         path.setAttribute("stroke", "url(#flowGrad)");
-        path.setAttribute("stroke-width", 1.3);
+        path.setAttribute("stroke-width", width);
         path.setAttribute("fill", "none");
-        path.setAttribute("opacity", "0.75");
+        path.setAttribute("opacity", "0.9");
+        flow.appendChild(path);
+      });
+    } else {
+      // Bottomless portafilter — realistic tiered rendering
+      const cx = 210;
+      const ch = ev.channeling;
+      const rawFs = s.yield / s.time; // actual g/s
+      const isChoked = rawFs < 0.6;
+      const isGushing = rawFs > 2.2;
+      // Gradient choice reflects reality: blonde (paler) when channeling or
+      // gushing (more air/water diluting colour), dark when over-extracted
+      let gradient;
+      if (ch > 0.35 || isGushing) gradient = "url(#flowGradBlonde)";
+      else if (ev.extTag === "bitter") gradient = "url(#flowGradDark)";
+      else gradient = "url(#flowGrad)";
+      const SVG_NS = "http://www.w3.org/2000/svg";
+
+      if (isChoked) {
+        // Dripping — thin top stream that breaks into discrete drops
+        const top = document.createElementNS(SVG_NS, "path");
+        top.setAttribute("d", `M ${cx},${flowStartY} L ${cx},${flowStartY + 30}`);
+        top.setAttribute("stroke", gradient);
+        top.setAttribute("stroke-width", 1.4);
+        top.setAttribute("fill", "none");
+        top.setAttribute("opacity", "0.85");
+        flow.appendChild(top);
+        for (let i = 0; i < 4; i++) {
+          const drop = document.createElementNS(SVG_NS, "ellipse");
+          drop.setAttribute("cx", cx);
+          drop.setAttribute("cy", flowStartY + 55 + i * 60);
+          drop.setAttribute("rx", 2);
+          drop.setAttribute("ry", 3.5);
+          drop.setAttribute("fill", "#3a1a08");
+          drop.setAttribute("opacity", "0.85");
+          flow.appendChild(drop);
+        }
+      } else if (ch > 0.45) {
+        // Severe channeling — multiple diverging streams + heavy spritz
+        const streamCount = 3 + Math.round(Math.min(1, (ch - 0.45) / 0.4));
+        const spread = 10 + ch * 28;
+        for (let i = 0; i < streamCount; i++) {
+          const t = streamCount === 1 ? 0 : (i / (streamCount - 1)) * 2 - 1;
+          const topX = cx + t * spread * 0.2;
+          const midX = cx + t * spread;
+          const botX = cx + t * spread * 0.55;
+          const path = document.createElementNS(SVG_NS, "path");
+          path.setAttribute("d", `M ${topX},${flowStartY} Q ${midX},${(flowStartY + flowEndY) / 2} ${botX},${flowEndY}`);
+          path.setAttribute("stroke", gradient);
+          path.setAttribute("stroke-width", (1.3 + Math.random() * 0.8) * pressureFactor);
+          path.setAttribute("fill", "none");
+          path.setAttribute("opacity", 0.7 + Math.random() * 0.25);
+          flow.appendChild(path);
+        }
+        // Spritzer droplets flying sideways + downward
+        const sCount = 8 + Math.floor(ch * 10);
+        for (let i = 0; i < sCount; i++) {
+          const c = document.createElementNS(SVG_NS, "circle");
+          const side = Math.random() < 0.5 ? -1 : 1;
+          const dist = 14 + Math.random() * 42;
+          const yPos = flowStartY + 5 + Math.random() * 80;
+          c.setAttribute("cx", cx + side * dist);
+          c.setAttribute("cy", yPos);
+          c.setAttribute("r", 0.7 + Math.random() * 1.5);
+          c.setAttribute("fill", "#d4a574");
+          c.setAttribute("opacity", 0.55 + Math.random() * 0.35);
+          flow.appendChild(c);
+        }
+      } else if (ch > 0.2) {
+        // Mild channeling — mostly a mouse tail but asymmetric with a few spritzers
+        const baseWidth = (2.8 + ev.flowSpeed * 2.2) * pressureFactor;
+        const bendSide = Math.random() < 0.5 ? -1 : 1;
+        const bend = bendSide * ch * 7;
+        const tipW = baseWidth * 0.55;
+        // Main body with a subtle sideways bulge
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d",
+          `M ${cx - baseWidth/2},${flowStartY} ` +
+          `L ${cx + baseWidth/2},${flowStartY} ` +
+          `Q ${cx + baseWidth/2 + bend},${(flowStartY+flowEndY)/2} ${cx + tipW/2 + bend*0.4},${flowEndY} ` +
+          `L ${cx - tipW/2 + bend*0.4},${flowEndY} ` +
+          `Q ${cx - baseWidth/2 + bend},${(flowStartY+flowEndY)/2} ${cx - baseWidth/2},${flowStartY} Z`);
+        path.setAttribute("fill", gradient);
+        path.setAttribute("opacity", "0.92");
+        flow.appendChild(path);
+        // A few side spritzers on one side (where the weak spot is)
+        const sCount = 2 + Math.floor(ch * 6);
+        for (let i = 0; i < sCount; i++) {
+          const c = document.createElementNS(SVG_NS, "circle");
+          const preferredSide = Math.random() < 0.7 ? bendSide : -bendSide;
+          c.setAttribute("cx", cx + preferredSide * (14 + Math.random() * 22));
+          c.setAttribute("cy", flowStartY + 8 + Math.random() * 55);
+          c.setAttribute("r", 0.7 + Math.random() * 1.2);
+          c.setAttribute("fill", "#c88a4a");
+          c.setAttribute("opacity", 0.5 + Math.random() * 0.35);
+          flow.appendChild(c);
+        }
+      } else if (isGushing) {
+        // Clean gusher — thick wide stream, minimal taper, paler colour
+        const baseWidth = 7 + ev.flowSpeed * 3;
+        const tipWidth = baseWidth * 0.82;
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", `M ${cx - baseWidth/2},${flowStartY} L ${cx + baseWidth/2},${flowStartY} L ${cx + tipWidth/2},${flowEndY} L ${cx - tipWidth/2},${flowEndY} Z`);
+        path.setAttribute("fill", gradient);
+        path.setAttribute("opacity", "0.9");
+        flow.appendChild(path);
+      } else {
+        // Clean mouse tail — the ideal: tapered single stream
+        const baseWidth = (3 + ev.flowSpeed * 2) * pressureFactor;
+        const tipWidth = Math.max(1, baseWidth * 0.5);
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", `M ${cx - baseWidth/2},${flowStartY} L ${cx + baseWidth/2},${flowStartY} L ${cx + tipWidth/2},${flowEndY} L ${cx - tipWidth/2},${flowEndY} Z`);
+        path.setAttribute("fill", gradient);
+        path.setAttribute("opacity", "0.95");
         flow.appendChild(path);
       }
-      for (let i = 0; i < 5; i++) {
-        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        const ang = Math.random() * Math.PI * 2;
-        c.setAttribute("cx", 210 + Math.cos(ang) * (25 + Math.random() * 20));
-        c.setAttribute("cy", 130 + Math.random() * 40);
-        c.setAttribute("r", 1.2);
-        c.setAttribute("fill", "#c88a4a");
-        c.setAttribute("opacity", "0.8");
-        flow.appendChild(c);
-      }
-    } else {
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      const widthTop = baseWidth;
-      const widthBot = Math.max(1, baseWidth * 0.55);
-      path.setAttribute("d", `M ${210 - widthTop / 2},${flowStartY} L ${210 + widthTop / 2},${flowStartY} L ${210 + widthBot / 2},${flowEndY} L ${210 - widthBot / 2},${flowEndY} Z`);
-      path.setAttribute("fill", "url(#flowGrad)");
-      path.setAttribute("opacity", "0.95");
-      flow.appendChild(path);
     }
   }
 
-  const pfLabel = s.pf === "stock" ? "STOCK PORTAFILTER" : "BOTTOMLESS";
-  let flowState;
-  if (ev.flowSpeed < 0.6) flowState = "SLOW DRIP";
-  else if (ev.flowSpeed > 1.3) flowState = "GUSHING";
-  else flowState = "STEADY POUR";
-  let extraWarn = "";
-  if (ev.channeling > 0.35 && s.pf === "bottomless") extraWarn = " · CHANNELING";
-  $("flowHint").textContent = `${pfLabel} · ${flowState}${extraWarn}`;
-
+  // CUP FILL — animFraction scales the espresso volume
   const cupCapacity = 150;
-  const espressoMl = s.yield;
-  const milkMl = s.milk ? (s.steam * 8) : 0;
+  const espressoMl = s.yield * animFraction;
+  const milkMl = s.milk && !s.animating ? (s.steam * 8) : 0;
   const totalMl = espressoMl + milkMl;
   const cupBottom = 465, cupTop = 320;
   const cupHeightPx = cupBottom - cupTop;
   const fillPct = clamp(totalMl / cupCapacity, 0, 1);
   const liquidTopY = cupBottom - cupHeightPx * fillPct;
-  const cremaThick = 3 + ev.crema * 11;
+  // Crema builds up toward the end of the shot
+  const cremaGrowthFactor = animFraction > 0.3 ? clamp((animFraction - 0.3) / 0.7, 0, 1) : 0;
+  const cremaThick = (3 + ev.crema * 11) * cremaGrowthFactor;
 
   const espressoLayer = $("espressoLayer");
   const cremaLayer = $("cremaLayer");
   const milkLayer = $("milkLayer");
 
-  if (!s.milk) {
+  if (!s.milk || s.animating) {
     espressoLayer.setAttribute("y", liquidTopY + cremaThick);
-    espressoLayer.setAttribute("height", cupBottom - (liquidTopY + cremaThick));
+    espressoLayer.setAttribute("height", Math.max(0, cupBottom - (liquidTopY + cremaThick)));
     cremaLayer.setAttribute("y", liquidTopY);
     cremaLayer.setAttribute("height", cremaThick);
-    cremaLayer.setAttribute("opacity", 0.5 + ev.crema * 0.5);
+    cremaLayer.setAttribute("opacity", (0.5 + ev.crema * 0.5) * cremaGrowthFactor);
     milkLayer.setAttribute("opacity", 0);
     let cremaColor = "url(#cremaGrad)";
     if (ev.extTag === "sour") cremaColor = "#d9b88a";
@@ -540,13 +1412,29 @@ function renderVis(ev) {
     milkLayer.setAttribute("opacity", 1);
     renderLatteArt(ev, liquidTopY, milkHeight, espHeight);
   }
-  $("steamGroup").setAttribute("opacity", s.milk && s.temp > 55 ? (s.temp - 55) / 30 : 0);
+  $("steamGroup").setAttribute("opacity", s.milk && !s.animating && s.temp > 55 ? (s.temp - 55) / 30 : 0);
+
+  // Flow hint — matches visualization tiers
+  const pfLabel = s.pf === "stock" ? "STOCK" : "BOTTOMLESS";
+  let flowState = s.animating ? "EXTRACTING" : "PREVIEW";
+  let flowDetail = "";
+  if (s.pf === "bottomless") {
+    const rawFs = s.yield / s.time;
+    const ch = ev.channeling;
+    if (rawFs < 0.6) flowDetail = " · DRIPPING";
+    else if (ch > 0.45) flowDetail = " · SEVERE CHANNELING";
+    else if (ch > 0.2) flowDetail = " · CHANNELING";
+    else if (rawFs > 2.2) flowDetail = " · GUSHING";
+    else flowDetail = " · MOUSE TAIL";
+  }
+  if (s.grindChanged && !s.animating) flowDetail += " · GRINDS NOT PURGED";
+  $("flowHint").textContent = `${pfLabel} · ${flowState}${flowDetail}`;
 }
 
 function renderCremaTexture(ev, topY, thick) {
   const g = $("cremaDots");
   g.innerHTML = "";
-  if (ev.crema < 0.25) return;
+  if (ev.crema < 0.25 || thick < 1) return;
   const count = Math.floor(5 + ev.crema * 12);
   for (let i = 0; i < count; i++) {
     const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -582,10 +1470,7 @@ function renderLatteArt(ev, topY, milkH, espH) {
     (s.milkType === "cow" ? 0.9 : s.milkType === "oat" ? 0.8 : 0.4)
     - tempPenalty * 0.6 - overSteam * 0.5 - underSteam * 0.6, 0, 1
   );
-  const artQuality = clamp(
-    milkFoamQuality * 0.6 + ev.crema * 0.3
-    + (s.pf === "stock" ? 0 : 0.05), 0, 1
-  );
+  const artQuality = clamp(milkFoamQuality * 0.6 + ev.crema * 0.3 + (s.pf === "stock" ? 0 : 0.05), 0, 1);
   if (s.pour === "plain" || artQuality < 0.15) {
     if (artQuality > 0.2) {
       const c = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
@@ -686,27 +1571,27 @@ function renderVerdict(ev) {
 
   if (ev.perfect) {
     cls = "star"; label = "★ Perfect"; titleText = "Textbook pull";
-    body = "Everything is in the sweet spot — balance, crema, clean flow, fresh beans. This is the shot to remember.";
+    body = "Everything in the sweet spot — balance, crema, clean flow, fresh beans, purged grinder. This is the shot.";
   } else if (ev.extTag === "sour") {
     cls = "bad"; label = "Sour"; titleText = "Under-extracted";
-    body = "Flow was too fast — water didn't dissolve enough solubles. Expect sour, sharp, thin mouthfeel.";
+    body = "Flow was too fast. Expect sour, sharp, thin mouthfeel.";
   } else if (ev.extTag === "bitter") {
     cls = "bad"; label = "Bitter"; titleText = "Over-extracted";
-    body = "Flow was slow and too much was pulled from the puck. Expect bitter, ashy, dry finish.";
+    body = "Too much pulled from the puck. Expect bitter, ashy, dry finish.";
   } else if (ev.balance > 0.8) {
     cls = "good"; label = "Great"; titleText = "Well balanced";
-    body = "Extraction sits in the ideal window. Sweet, balanced, with a pleasant lingering finish.";
+    body = "Extraction sits in the ideal window.";
   } else {
     cls = "warn"; label = "OK"; titleText = "Close to target";
-    body = "Near the balanced zone — small tweaks to grind or time will sharpen the result.";
+    body = "Near the balanced zone — small tweaks will sharpen it.";
   }
   if (ev.channeling > 0.5 && s.pf === "bottomless") {
     cls = "bad"; label = "Channeling"; titleText = "Puck failure";
-    body = "Multiple streams spritzing from the basket — water punched through weak spots instead of flowing evenly.";
+    body = "Multiple streams spritzing — water punched through weak spots instead of flowing evenly.";
   }
   if (ev.freshness < 0.4) {
-    cls = "warn"; label = "Stale"; titleText = "Beans past their prime";
-    body = "Beans are too old (or so fresh they're still off-gassing). Crema will be thin regardless of technique.";
+    cls = "warn"; label = "Stale"; titleText = "Beans past prime";
+    body = "Too old (or still off-gassing). Crema thin regardless of technique.";
   }
   badge.className = "badge " + cls;
   badge.textContent = label;
@@ -717,76 +1602,76 @@ function renderVerdict(ev) {
 function renderTastingNotes(ev) {
   const s = state;
   let notes = [];
+
+  // Origin-specific character
+  const originNotes = ev.origin.notes.join(", ");
+  const roastChar = s.roast === "light" ? "bright, tea-like" : s.roast === "dark" ? "deep, roasty" : "balanced";
+
   if (ev.perfect) {
-    notes.push("Syrupy body, caramel sweetness up front, dark chocolate finish, a faint floral note lingering on the tongue. No sharpness, no bitterness — just resolved.");
+    notes.push(`Clean, ${roastChar} — notes of ${originNotes}. Syrupy body, pleasant finish, no sharp edges.`);
   } else if (ev.extTag === "sour") {
-    notes.push("Sharp citrus bite, thin body, watery finish. Tastes like lemon or underripe fruit.");
+    notes.push(`Sharp and thin. The ${originNotes.split(",")[0]} character is there but drowned by acidity.`);
   } else if (ev.extTag === "bitter") {
-    notes.push("Ashy, burnt-toast bitterness, drying mouthfeel, lingers unpleasantly. Masks any nuance.");
+    notes.push(`Ashy and drying. Origin notes (${originNotes}) are buried under over-extraction bitterness.`);
   } else {
-    notes.push("Cocoa and nut notes, medium body, pleasant finish. Could be sweeter with finer tuning.");
+    notes.push(`Notes of ${originNotes}, medium body, pleasant but could be sweeter with tighter dialing.`);
   }
-  if (ev.freshness < 0.4 && s.fresh > 21) notes.push("Papery, cardboard-like aftertaste from oxidised oils.");
-  else if (s.fresh < 4) notes.push("CO₂ bite — beans are still off-gassing, flavours are muted.");
-  if (s.waterTemp > 94) notes.push("Bold, roasty, slightly charred edges.");
-  else if (s.waterTemp < 91) notes.push("Bright, acidic, tea-like.");
-  if (s.milk && ev.perfect) notes.push("Milk adds silken sweetness — espresso cuts through cleanly without disappearing.");
-  else if (s.milk && ev.extTag === "sour") notes.push("In milk: tastes weak and vinegary, coffee gets lost.");
-  else if (s.milk && ev.extTag === "bitter") notes.push("In milk: bitterness punches through, chocolate notes dominate.");
+
+  if (ev.freshness < 0.4 && s.fresh > 21) notes.push("Papery aftertaste from oxidised oils.");
+  else if (s.fresh < 4) notes.push("CO₂ bite — flavours are muted by off-gassing.");
+  if (s.grindChanged) notes.push("Slightly muddy — old grounds from the previous setting diluted this shot.");
+  if (s.waterTemp > 94) notes.push("Bolder, slightly charred edges.");
+  else if (s.waterTemp < 91) notes.push("Brighter, more tea-like.");
+  if (s.profile === "ramp") notes.push("Ramp profile — smoother onset, less harshness.");
+  else if (s.profile === "decline") notes.push("Declining profile — fuller body, gentler finish.");
+
+  if (s.milk && ev.perfect) notes.push("With milk: silken sweetness, espresso cuts through cleanly.");
+  else if (s.milk && ev.extTag === "sour") notes.push("In milk: weak and vinegary, coffee lost.");
+  else if (s.milk && ev.extTag === "bitter") notes.push("In milk: bitterness dominates, chocolate notes come forward.");
+
   $("tastingNotes").textContent = notes.join(" ");
 }
 
 function renderInsights(ev) {
   const s = state;
   const tips = [];
-  if (ev.perfect) tips.push(`<strong>This is the one.</strong> Remember: grind ${s.grind}, dose ${s.dose}g, ${s.yield}g out in ${s.time}s. Tomorrow's beans may need a ±1 grind tweak as they age.`);
-  if (ev.timeDelta > 6) tips.push(`<strong>Grind is too fine for this time.</strong> At ${s.grind}, water struggled through for ${s.time}s. Try ${Math.min(30, s.grind + 2)}–${Math.min(30, s.grind + 3)}.`);
-  else if (ev.timeDelta < -6) tips.push(`<strong>Grind is too coarse.</strong> Shot gushed in ${s.time}s — go finer, try ${Math.max(1, s.grind - 2)}–${Math.max(1, s.grind - 3)}.`);
-  if (ev.ratio < 1.6) tips.push(`<strong>Ristretto territory (${ev.ratio.toFixed(2)}:1).</strong> Syrupy, intense, low clarity. Great in milk drinks.`);
-  else if (ev.ratio > 2.8) tips.push(`<strong>Lungo territory (${ev.ratio.toFixed(2)}:1).</strong> Lighter body, more caffeine, bitterness risk if grind doesn't compensate.`);
+  if (ev.perfect) tips.push({ cls: "", t: `<strong>This is the one.</strong> Grind ${s.grind}, dose ${s.dose}g, ${s.yield}g out in ${s.time}s, ${s.roast} roast. Lock it in.` });
+  if (s.grindChanged) tips.push({ cls: "warn", t: `<strong>Grinder retention.</strong> You changed grind without purging — old grounds at the previous setting are still in the chute. Click <em>Purge 2g</em> before pulling.` });
+  if (ev.timeDelta > 6) tips.push({ cls: "", t: `<strong>Grind too fine for this time.</strong> At ${s.grind}, water struggled through for ${s.time}s. Try ${Math.min(30, s.grind + 2)}–${Math.min(30, s.grind + 3)}.` });
+  else if (ev.timeDelta < -6) tips.push({ cls: "", t: `<strong>Grind too coarse.</strong> Gushed in ${s.time}s — go finer, try ${Math.max(1, s.grind - 2)}–${Math.max(1, s.grind - 3)}.` });
+  if (s.roast === "light" && s.waterTemp < 94) tips.push({ cls: "", t: `<strong>Light roasts need heat.</strong> Bump water to 94–96 °C — they're dense and need more energy to extract.` });
+  if (s.roast === "dark" && s.waterTemp > 92) tips.push({ cls: "", t: `<strong>Dark roasts scorch easily.</strong> Drop water to 88–91 °C to avoid bitterness from over-extraction.` });
+  if (s.roast === "light" && ev.ratio < 2.2) tips.push({ cls: "", t: `<strong>Light roast, short ratio.</strong> Try a longer pull (1:2.5–1:3) — more water extracts more of that bright, delicate character.` });
+  if (s.profile === "ramp" && s.roast === "light") tips.push({ cls: "", t: `<strong>Ramp suits light roasts.</strong> Gentle onset protects delicate aromatics from harsh initial extraction.` });
+  if (s.profile === "decline" && ev.extTag === "bitter") tips.push({ cls: "", t: `<strong>Declining profile helps here.</strong> Reducing pressure late prevents over-extraction in the tail of the shot.` });
+  if (ev.ratio < 1.6) tips.push({ cls: "", t: `<strong>Ristretto territory (${ev.ratio.toFixed(2)}:1).</strong> Syrupy, intense. Great in milk drinks.` });
+  else if (ev.ratio > 2.8) tips.push({ cls: "", t: `<strong>Lungo territory (${ev.ratio.toFixed(2)}:1).</strong> Lighter body, bitterness risk if grind doesn't compensate.` });
   if (Math.abs(ev.tampOffset) > 0.4) {
-    if (ev.tampOffset > 0) tips.push(`<strong>Tamp is heavier than needed.</strong> Past ~35 lb, diminishing returns and sore wrists. Consistency beats force.`);
-    else tips.push(`<strong>Tamp is too light.</strong> Under ~25 lb the puck channels. Aim for firm and level, around 30 lb.`);
+    if (ev.tampOffset > 0) tips.push({ cls: "", t: `<strong>Tamp heavier than needed.</strong> Past ~35 lb, diminishing returns. Consistency beats force.` });
+    else tips.push({ cls: "", t: `<strong>Tamp too light.</strong> Under ~25 lb the puck channels. Aim firm and level.` });
   }
-  if (s.pre < 3 && ev.channeling > 0.25) tips.push(`<strong>Try more pre-infusion.</strong> Soaking the puck at low pressure for 5–8s lets it bloom evenly and reduces channeling.`);
-  else if (s.pre > 12) tips.push(`<strong>Very long pre-infusion.</strong> Useful for light roasts, but can muddy darker roasts by starting extraction before proper pressure.`);
-  if (s.waterTemp > 94 && ev.extTag === "bitter") tips.push(`<strong>Water is hot.</strong> Try 91–92 °C — lower temp shifts the shot sweeter and less bitter. (Hold the <em>1 Cup</em> button to adjust on the machine.)`);
-  else if (s.waterTemp < 91 && ev.extTag === "sour") tips.push(`<strong>Water is cool.</strong> Try 93–94 °C to push past the sour phase of extraction.`);
-  if (s.fresh < 4) tips.push(`<strong>Beans are too fresh.</strong> Days 1–3 post-roast are still off-gassing CO₂ — you'll see gushing, weird crema, muted flavour. Let them rest to day 7+.`);
-  else if (s.fresh > 35) tips.push(`<strong>Beans are tired.</strong> Past ~35 days post-roast, oils oxidise and crema thins regardless of technique. New bag time.`);
-  if (s.pf === "stock") tips.push(`<strong>Dual-wall basket fitted.</strong> Fakes crema by forcing air through a small hole — forgiving of bad grind, but masks real extraction. Switch to single-wall once dialled in.`);
-  else if (ev.channeling < 0.2) tips.push(`<strong>Clean mouse-tail.</strong> Bottomless proves your prep is solid — even distribution and level tamp.`);
-  else if (ev.channeling > 0.3) tips.push(`<strong>Channeling visible.</strong> Distribute more carefully (WDT), level the puck, tamp flat. Bottomless shows what stock hides.`);
-  if (s.basket === "single" && s.dose > 10) tips.push(`<strong>Dose overflows the single basket.</strong> Drop to ~7–9 g or switch to double.`);
-  if (s.basket === "triple" && s.dose < 19) tips.push(`<strong>Triple basket under-dosed.</strong> Too much headspace — dose 20–22 g.`);
+  if (s.pre < 3 && ev.channeling > 0.25) tips.push({ cls: "", t: `<strong>Try more pre-infusion.</strong> Soaking 5–8s at low pressure reduces channeling significantly.` });
+  if (s.fresh < 4) tips.push({ cls: "warn", t: `<strong>Beans too fresh.</strong> Days 1–3 post-roast are off-gassing CO₂ — let rest to day 7+.` });
+  else if (s.fresh > 35) tips.push({ cls: "warn", t: `<strong>Beans tired.</strong> Past ~35 days, oils oxidise. New bag time.` });
+  if (s.pf === "stock") tips.push({ cls: "", t: `<strong>Dual-wall basket fitted.</strong> Fakes crema through a pressure hole — forgiving but masks real extraction.` });
+  else if (ev.channeling < 0.2 && !s.animating) tips.push({ cls: "", t: `<strong>Clean mouse-tail.</strong> Bottomless proves your prep is solid.` });
+  else if (ev.channeling > 0.3) tips.push({ cls: "bad", t: `<strong>Channeling visible.</strong> Distribute (WDT), level, tamp flat. Pre-infusion helps too.` });
+  if (s.basket === "single" && s.dose > 10) tips.push({ cls: "", t: `<strong>Dose overflows single basket.</strong> Drop to ~7–9g or use double.` });
+  if (s.basket === "triple" && s.dose < 19) tips.push({ cls: "", t: `<strong>Triple basket under-dosed.</strong> Dose 20–22g.` });
   if (s.milk) {
-    if (s.temp > 70) tips.push(`<strong>Milk overheated.</strong> Above 70 °C proteins denature and foam collapses. Aim 60–65 °C.`);
-    if (s.temp < 55) tips.push(`<strong>Milk underheated.</strong> Thin, cool drink — texture needs ~60 °C.`);
-    if (s.steam < 6) tips.push(`<strong>Not enough steam time.</strong> Introduce air 3–4s, then submerge to texture.`);
-    if (s.steam > 18) tips.push(`<strong>Over-steamed.</strong> Big bubbles, stiff dry foam — can't pour art.`);
-    if (s.milkType === "skim") tips.push(`<strong>Skim makes meringue, not microfoam.</strong> Good for dry cappuccino, poor for art.`);
-    if (s.milkType === "oat") tips.push(`<strong>Oat barista.</strong> Silky microfoam — but fragile above 65 °C.`);
-    if (s.pour === "rosetta" && ev.crema < 0.4) tips.push(`<strong>Rosetta needs strong crema.</strong> Without a firm canvas, leaves blur.`);
+    if (s.temp > 70) tips.push({ cls: "bad", t: `<strong>Milk overheated.</strong> Above 70 °C foam collapses. Aim 60–65 °C.` });
+    if (s.temp < 55) tips.push({ cls: "", t: `<strong>Milk underheated.</strong> Thin, cool — needs ~60 °C.` });
+    if (s.steam < 6) tips.push({ cls: "", t: `<strong>Steam longer.</strong> Introduce air 3–4s, then submerge to texture.` });
+    if (s.steam > 18) tips.push({ cls: "", t: `<strong>Over-steamed.</strong> Big bubbles, can't pour art.` });
+    if (s.milkType === "skim") tips.push({ cls: "", t: `<strong>Skim = meringue foam.</strong> Good for dry cappuccino, poor for art.` });
+    if (s.pour === "rosetta" && ev.crema < 0.4) tips.push({ cls: "", t: `<strong>Rosetta needs strong crema.</strong> Dial the shot first.` });
   }
-  if (tips.length === 0) tips.push(`<strong>Looking good.</strong> Taste is the final judge — trust your palate.`);
-  $("insights").innerHTML = tips.slice(0, 5).map(t => `<div class="insight">${t}</div>`).join("");
+  if (tips.length === 0) tips.push({ cls: "", t: `<strong>Looking good.</strong> Press <em>Pull Shot</em> to run the extraction live.` });
+  $("insights").innerHTML = tips.slice(0, 5).map(t => `<div class="insight ${t.cls}">${t.t}</div>`).join("");
 }
 
-function renderRoadmap() {
-  $("roadmap").innerHTML = `
-    <strong>Future features worth adding:</strong>
-    · Roast level (light/medium/dark) — shifts ideal time, temp, grind<br>
-    · Bean origin profile (Ethiopian, Brazilian…) with expected flavour notes<br>
-    · Pressure-profile graph (9-bar plateau vs ramping)<br>
-    · Animated real-time pour with live TDS readout<br>
-    · Save & compare shots side-by-side<br>
-    · Grinder retention / purge reminder<br>
-    · Humidity & altitude compensation<br>
-    · Sound — steam hiss, pour, extraction
-  `;
-}
-
-function update() {
+// ============== UPDATE ==============
+function update(animFraction = 1) {
   $("grindVal").textContent = state.grind;
   $("doseVal").textContent = state.dose.toFixed(1) + " g";
   $("tampVal").textContent = state.tamp + " lb";
@@ -798,17 +1683,83 @@ function update() {
   $("freshVal").textContent = state.fresh + " days";
   $("steamVal").textContent = state.steam + " s";
   $("tempVal").textContent = state.temp + " °C";
+  $("grinderWarn").classList.toggle("on", state.grindChanged);
+
   const ev = evaluate();
-  renderVis(ev); renderMeters(ev); renderRadar(ev);
-  renderVerdict(ev); renderTastingNotes(ev); renderInsights(ev);
+  renderVis(ev, animFraction);
+  renderMeters(ev);
+  renderRadar(ev);
+  renderVerdict(ev);
+  renderTastingNotes(ev);
+  renderInsights(ev);
+  renderPressureChart(state.animating ? animFraction : -1);
 }
 
+// ============== ANIMATION ==============
+function startShot() {
+  if (state.animating) return;
+  state.animating = true;
+  state.animStart = performance.now();
+  $("pullBtn").textContent = "■ Stop";
+  $("pullBtn").classList.add("stop");
+  // Disable sliders
+  document.querySelectorAll("#lab input, #lab select, #lab button.preset, #lab .toggle-group button")
+    .forEach(el => { if (el.id !== "pullBtn" && el.id !== "milkOn") el.disabled = true; });
+
+  // Total duration = pre + time (simulated real-time)
+  const totalSec = state.pre + state.time;
+  const totalMs = totalSec * 1000;
+
+  function frame(now) {
+    if (!state.animating) return;
+    const elapsed = now - state.animStart;
+    const f = clamp(elapsed / totalMs, 0, 1);
+    $("timerDisplay").textContent = (elapsed / 1000).toFixed(1) + "s";
+    update(f);
+    if (f < 1) requestAnimationFrame(frame);
+    else finishShot();
+  }
+  requestAnimationFrame(frame);
+}
+
+function finishShot() {
+  state.animating = false;
+  state.lastShotGrind = state.grind;
+  state.grindChanged = false;
+  $("pullBtn").textContent = "▶ Pull Shot";
+  $("pullBtn").classList.remove("stop");
+  document.querySelectorAll("#lab input, #lab select, #lab button.preset, #lab .toggle-group button")
+    .forEach(el => { el.disabled = false; });
+  $("timerDisplay").textContent = (state.pre + state.time).toFixed(1) + "s";
+  update(1);
+}
+
+function stopShot() {
+  state.animating = false;
+  $("pullBtn").textContent = "▶ Pull Shot";
+  $("pullBtn").classList.remove("stop");
+  document.querySelectorAll("#lab input, #lab select, #lab button.preset, #lab .toggle-group button")
+    .forEach(el => { el.disabled = false; });
+  $("timerDisplay").textContent = "0.0s";
+  update(0);
+}
+
+// ============== WIRING ==============
 ["grind","dose","tamp","pre","time","yield","waterTemp","fresh","steam","temp"].forEach(id => {
   $(id).addEventListener("input", e => {
+    const prev = state[id];
     state[id] = parseFloat(e.target.value);
+    // Grinder retention: grind change triggers warning
+    if (id === "grind" && state[id] !== state.lastShotGrind) {
+      state.grindChanged = true;
+    } else if (id === "grind" && state[id] === state.lastShotGrind) {
+      state.grindChanged = false;
+    }
     update();
   });
 });
+
+$("origin").addEventListener("change", e => { state.origin = e.target.value; update(); });
 
 function bindGroup(groupId, key) {
   const grp = $(groupId);
@@ -821,6 +1772,8 @@ function bindGroup(groupId, key) {
     });
   });
 }
+bindGroup("roastGroup", "roast");
+bindGroup("profileGroup", "profile");
 bindGroup("pfGroup", "pf");
 bindGroup("basketGroup", "basket");
 bindGroup("milkTypeGroup", "milkType");
@@ -832,30 +1785,58 @@ $("milkOn").addEventListener("change", e => {
   update();
 });
 
+$("pullBtn").addEventListener("click", () => {
+  if (state.animating) stopShot();
+  else startShot();
+});
+
+$("purgeBtn").addEventListener("click", () => {
+  state.grindChanged = false;
+  state.lastShotGrind = state.grind;
+  update();
+});
+
+// Presets
 const presets = {
-  perfect:   { grind: 11, dose: 18, tamp: 30, pre: 7, time: 28, yield: 36, waterTemp: 93, fresh: 14, basket: "double", pf: "bottomless" },
-  classic:   { grind: 12, dose: 18, tamp: 30, pre: 5, time: 28, yield: 36, waterTemp: 93, fresh: 14, basket: "double" },
-  ristretto: { grind: 9,  dose: 18, tamp: 32, pre: 6, time: 30, yield: 24, waterTemp: 92, fresh: 14, basket: "double" },
-  lungo:     { grind: 16, dose: 18, tamp: 28, pre: 4, time: 32, yield: 54, waterTemp: 94, fresh: 14, basket: "double" },
-  modern:    { grind: 14, dose: 18, tamp: 30, pre: 8, time: 26, yield: 45, waterTemp: 94, fresh: 10, basket: "double" },
+  perfect:   { grind: 11, dose: 18, tamp: 30, pre: 7, time: 28, yield: 36, waterTemp: 93, fresh: 14, basket: "double", pf: "bottomless", roast: "medium", profile: "flat", origin: "blend" },
+  classic:   { grind: 12, dose: 18, tamp: 30, pre: 5, time: 28, yield: 36, waterTemp: 93, fresh: 14, basket: "double", roast: "medium", profile: "flat" },
+  ristretto: { grind: 9,  dose: 18, tamp: 32, pre: 6, time: 30, yield: 24, waterTemp: 92, fresh: 14, basket: "double", roast: "dark",   profile: "flat" },
+  lungo:     { grind: 16, dose: 18, tamp: 28, pre: 4, time: 32, yield: 54, waterTemp: 94, fresh: 14, basket: "double", roast: "medium", profile: "flat" },
+  modern:    { grind: 14, dose: 18, tamp: 30, pre: 8, time: 26, yield: 45, waterTemp: 95, fresh: 10, basket: "double", roast: "light",  profile: "ramp" },
 };
 document.querySelectorAll(".preset").forEach(b => {
   b.addEventListener("click", () => {
+    if (state.animating) return;
     const p = presets[b.dataset.preset];
     Object.assign(state, p);
+    state.grindChanged = false;
+    state.lastShotGrind = state.grind;
     ["grind","dose","tamp","pre","time","yield","waterTemp","fresh"].forEach(k => $(k).value = state[k]);
+    if (p.origin) $("origin").value = p.origin;
     const syncGroup = (gid, key) => {
       const g = $(gid);
       g.querySelectorAll("button").forEach(x => x.classList.toggle("active", x.dataset.val === state[key]));
     };
     syncGroup("basketGroup", "basket");
     if (p.pf) syncGroup("pfGroup", "pf");
+    if (p.roast) syncGroup("roastGroup", "roast");
+    if (p.profile) syncGroup("profileGroup", "profile");
     update();
   });
 });
 
-renderRoadmap();
+// Tabs
+document.querySelectorAll(".tabs button").forEach(b => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.querySelector(`.tab-content[data-tab="${b.dataset.tab}"]`).classList.add("active");
+  });
+});
+
 update();
 </script>
-</body>
-</html>
+
+
+</body></html>
