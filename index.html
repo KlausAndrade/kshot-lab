@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sage Barista Pro — Interactive Shot Simulator</title>
+<style>
+  :root {
+    --bg: #1a1210;
+    --panel: #241915;
+    --panel-2: #2e2119;
+    --border: #3a2a20;
+    --text: #f2e8de;
+    --muted: #a89585;
+    --accent: #d98b4a;
+    --accent-2: #b56731;
+    --good: #6fbf73;
+    --warn: #e8b54a;
+    --bad: #d9534f;
+    --crema: #c88a4a;
+    --espresso: #2a160a;
+    --espresso-mid: #4a2411;
+    --espresso-light: #8a4d27;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  header h1 span { color: var(--accent); }
+  header .sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .machine-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 340px 1fr 340px;
+    gap: 20px;
+  }
+  @media (max-width: 1100px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .panel h2 {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px 0;
+    font-weight: 600;
+  }
+  .section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .control {
+    margin-bottom: 14px;
+  }
+  .control:last-child { margin-bottom: 0; }
+  .control-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .control label {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .control .val {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--panel-2);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    height: 4px;
+    background: var(--panel-2);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--panel);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--panel);
+  }
+
+  .toggle-group {
+    display: flex;
+    gap: 6px;
+    background: var(--panel-2);
+    padding: 3px;
+    border-radius: 6px;
+  }
+  .toggle-group button {
+    flex: 1;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .toggle-group button.active {
+    background: var(--accent);
+    color: #1a1210;
+    font-weight: 600;
+  }
+  .toggle-group button:hover:not(.active) {
+    color: var(--text);
+  }
+
+  /* Visualization */
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+  }
+  .stage-svg-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .stage-svg {
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+  }
+
+  .flow-hint {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    font-family: "SF Mono", Menlo, monospace;
+    letter-spacing: 1px;
+  }
+
+  .meters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  .meter {
+    background: var(--panel-2);
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .meter-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .meter-head .score {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .meter-bar {
+    height: 6px;
+    background: #1a1210;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%;
+    transition: width 0.4s, background 0.4s;
+    border-radius: 3px;
+  }
+
+  /* Feedback */
+  .verdict {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .verdict .head {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .badge.good { background: rgba(111,191,115,0.15); color: var(--good); }
+  .badge.warn { background: rgba(232,181,74,0.15); color: var(--warn); }
+  .badge.bad  { background: rgba(217,83,79,0.15); color: var(--bad); }
+
+  .insight {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.55;
+    padding: 10px 12px;
+    background: var(--panel-2);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 10px;
+  }
+  .insight:last-child { margin-bottom: 0; }
+  .insight strong { color: var(--text); }
+
+  .milk-toggle {
+    margin-bottom: 10px;
+  }
+  .milk-section {
+    opacity: 0.4;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .milk-section.on {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .switch input { display: none; }
+  .switch .track {
+    width: 36px;
+    height: 20px;
+    background: var(--panel-2);
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.2s;
+    border: 1px solid var(--border);
+  }
+  .switch .track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  .switch input:checked + .track {
+    background: var(--accent);
+  }
+  .switch input:checked + .track::after {
+    left: 18px;
+    background: #1a1210;
+  }
+
+  .preset-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .preset {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  /* Ratio display */
+  .ratio-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel-2);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>Shot <span>Lab</span></h1>
+      <div class="sub">Dial in your espresso visually</div>
+    </div>
+    <div class="machine-tag">Sage Barista Pro</div>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT CONTROLS -->
+    <div class="panel">
+      <h2>Espresso</h2>
+
+      <div class="section">
+        <div class="control">
+          <div class="control-head">
+            <label>Grind size</label>
+            <span class="val" id="grindVal">12</span>
+          </div>
+          <input type="range" id="grind" min="1" max="30" value="12" />
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px;">
+            <span>Fine</span><span>Coarse</span>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label>Dose (in)</label>
+            <span class="val" id="doseVal">18.0 g</span>
+          </div>
+          <input type="range" id="dose" min="14" max="22" step="0.5" value="18" />
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label>Tamp pressure</label>
+            <span class="val" id="tampVal">30 lb</span>
+          </div>
+          <input type="range" id="tamp" min="10" max="50" value="30" />
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px;">
+            <span>Light</span><span>Heavy</span>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label>Shot time</label>
+            <span class="val" id="timeVal">28 s</span>
+          </div>
+          <input type="range" id="time" min="15" max="45" value="28" />
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label>Yield (out)</label>
+            <span class="val" id="yieldVal">36 g</span>
+          </div>
+          <input type="range" id="yield" min="18" max="60" value="36" />
+          <div style="margin-top:6px;">
+            <span class="ratio-chip">Ratio <span id="ratioVal">1:2.0</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="control">
+          <label style="display:block;margin-bottom:6px;">Portafilter</label>
+          <div class="toggle-group" id="pfGroup">
+            <button data-val="stock" class="active">Stock (dual wall)</button>
+            <button data-val="bottomless">Bottomless</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <label style="display:block;margin-bottom:6px;">Basket</label>
+          <div class="toggle-group" id="basketGroup">
+            <button data-val="single" >Single (8g)</button>
+            <button data-val="double" class="active">Double (18g)</button>
+            <button data-val="triple">Triple (22g)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <label style="display:block;margin-bottom:6px;font-size:12px;color:var(--muted);">Quick presets</label>
+        <div class="preset-row">
+          <button class="preset" data-preset="classic">Classic double</button>
+          <button class="preset" data-preset="ristretto">Ristretto</button>
+          <button class="preset" data-preset="lungo">Lungo</button>
+          <button class="preset" data-preset="modern">Modern light</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER STAGE -->
+    <div class="panel stage">
+      <h2 style="align-self:flex-start;">Live View</h2>
+
+      <div class="stage-svg-wrap">
+        <svg class="stage-svg" viewBox="0 0 420 520" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- crema gradient -->
+            <radialGradient id="cremaGrad" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="#e8b97a" />
+              <stop offset="70%" stop-color="#c88a4a" />
+              <stop offset="100%" stop-color="#8a5528" />
+            </radialGradient>
+            <!-- espresso body -->
+            <linearGradient id="espressoGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a2411" />
+              <stop offset="100%" stop-color="#1a0a04" />
+            </linearGradient>
+            <!-- portafilter metal -->
+            <linearGradient id="metalGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#b0b0b0" />
+              <stop offset="50%" stop-color="#707070" />
+              <stop offset="100%" stop-color="#4a4a4a" />
+            </linearGradient>
+            <linearGradient id="spoutGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#888" />
+              <stop offset="100%" stop-color="#444" />
+            </linearGradient>
+            <!-- flow gradient -->
+            <linearGradient id="flowGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d4a574" stop-opacity="0.9" />
+              <stop offset="100%" stop-color="#6a3416" stop-opacity="0.95" />
+            </linearGradient>
+            <!-- milk -->
+            <linearGradient id="milkGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fffaf0" />
+              <stop offset="100%" stop-color="#f0e4d0" />
+            </linearGradient>
+          </defs>
+
+          <!-- Machine group (portafilter above cup) -->
+          <g id="machineGroup">
+            <!-- Group head -->
+            <rect x="140" y="20" width="140" height="30" rx="3" fill="#2a2a2a" stroke="#555" stroke-width="1"/>
+            <rect x="155" y="50" width="110" height="18" fill="url(#metalGrad)" />
+
+            <!-- Portafilter handle - left -->
+            <rect x="60" y="78" width="95" height="14" rx="7" fill="#2a1a10" stroke="#1a0a04" />
+            <circle cx="64" cy="85" r="6" fill="#1a0a04"/>
+
+            <!-- Portafilter basket housing -->
+            <path id="pfHousing" d="M 155,72 L 265,72 L 258,110 L 162,110 Z" fill="url(#metalGrad)" stroke="#333" stroke-width="0.5"/>
+
+            <!-- Stock spouts (two) -->
+            <g id="stockSpouts">
+              <path d="M 188,110 L 185,128 L 195,128 L 192,110 Z" fill="url(#spoutGrad)" />
+              <path d="M 228,110 L 225,128 L 235,128 L 232,110 Z" fill="url(#spoutGrad)" />
+            </g>
+
+            <!-- Bottomless basket view -->
+            <g id="bottomlessBasket" style="display:none;">
+              <ellipse cx="210" cy="110" rx="48" ry="5" fill="#1a0a04" />
+              <rect x="162" y="105" width="96" height="8" fill="#3a3a3a" />
+            </g>
+          </g>
+
+          <!-- Flow -->
+          <g id="flowGroup"></g>
+
+          <!-- Cup -->
+          <g id="cupGroup">
+            <!-- Saucer -->
+            <ellipse cx="210" cy="480" rx="115" ry="12" fill="#e8e0d4" />
+            <ellipse cx="210" cy="478" rx="115" ry="10" fill="#f2ebe0" />
+            <!-- Cup body -->
+            <path d="M 135,310 Q 135,460 170,475 L 250,475 Q 285,460 285,310 Z" fill="#f2ebe0" stroke="#c8bfae" stroke-width="1.5"/>
+            <!-- Cup handle -->
+            <path d="M 285,340 Q 320,345 320,380 Q 320,415 285,420" fill="none" stroke="#c8bfae" stroke-width="4" />
+            <!-- Cup inner -->
+            <ellipse cx="210" cy="315" rx="75" ry="10" fill="#d4c8b2" />
+
+            <!-- Clip paths for liquid -->
+            <clipPath id="cupClip">
+              <path d="M 138,313 Q 138,458 172,472 L 248,472 Q 282,458 282,313 Z" />
+            </clipPath>
+
+            <!-- Liquid layers -->
+            <g clip-path="url(#cupClip)">
+              <!-- Espresso body -->
+              <rect id="espressoLayer" x="130" y="400" width="160" height="80" fill="url(#espressoGrad)" />
+              <!-- Crema -->
+              <rect id="cremaLayer" x="130" y="390" width="160" height="12" fill="url(#cremaGrad)" />
+              <!-- Crema texture dots -->
+              <g id="cremaDots"></g>
+              <!-- Milk layer (for latte) -->
+              <rect id="milkLayer" x="130" y="500" width="160" height="0" fill="url(#milkGrad)" opacity="0"/>
+              <!-- Latte art -->
+              <g id="latteArt" opacity="0"></g>
+            </g>
+
+            <!-- Cup rim highlight -->
+            <ellipse cx="210" cy="311" rx="75" ry="8" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.5"/>
+          </g>
+
+          <!-- Steam -->
+          <g id="steamGroup" opacity="0">
+            <path d="M 180,295 Q 175,280 185,265 Q 195,250 185,235" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"/>
+            <path d="M 210,295 Q 215,278 205,260 Q 195,245 210,225" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"/>
+            <path d="M 240,295 Q 235,282 245,265 Q 255,250 240,235" stroke="#fff" stroke-width="2" fill="none" opacity="0.5"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="flow-hint" id="flowHint">STOCK PORTAFILTER · EXTRACTING...</div>
+
+      <div class="meters">
+        <div class="meter">
+          <div class="meter-head"><span>Strength</span><span class="score" id="strengthScore">—</span></div>
+          <div class="meter-bar"><div class="meter-fill" id="strengthFill" style="width:50%;background:var(--accent);"></div></div>
+        </div>
+        <div class="meter">
+          <div class="meter-head"><span>Crema</span><span class="score" id="cremaScore">—</span></div>
+          <div class="meter-bar"><div class="meter-fill" id="cremaFill" style="width:50%;background:var(--crema);"></div></div>
+        </div>
+        <div class="meter">
+          <div class="meter-head"><span>Body</span><span class="score" id="bodyScore">—</span></div>
+          <div class="meter-bar"><div class="meter-fill" id="bodyFill" style="width:50%;background:var(--accent-2);"></div></div>
+        </div>
+        <div class="meter">
+          <div class="meter-head"><span>Balance</span><span class="score" id="balanceScore">—</span></div>
+          <div class="meter-bar"><div class="meter-fill" id="balanceFill" style="width:50%;background:var(--good);"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT FEEDBACK + MILK -->
+    <div class="panel">
+      <h2>Diagnosis</h2>
+
+      <div class="section">
+        <div class="verdict">
+          <div class="head" id="verdictHead">
+            <span class="badge good" id="verdictBadge">Good</span>
+            <span id="verdictTitle">Balanced shot</span>
+          </div>
+          <div id="verdictText" style="color:var(--muted);font-size:12px;">Tweak the controls to see how your shot changes.</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div id="insights"></div>
+      </div>
+
+      <div class="section">
+        <div class="milk-toggle">
+          <label class="switch">
+            <input type="checkbox" id="milkOn" />
+            <span class="track"></span>
+            <span style="font-size:13px;">Add milk</span>
+          </label>
+        </div>
+
+        <div class="milk-section" id="milkSection">
+          <div class="control">
+            <label style="display:block;margin-bottom:6px;">Milk type</label>
+            <div class="toggle-group" id="milkTypeGroup">
+              <button data-val="cow" class="active">Cow whole</button>
+              <button data-val="skim">Skim</button>
+              <button data-val="oat">Oat (barista)</button>
+            </div>
+          </div>
+
+          <div class="control">
+            <div class="control-head">
+              <label>Steam time</label>
+              <span class="val" id="steamVal">12 s</span>
+            </div>
+            <input type="range" id="steam" min="4" max="25" value="12" />
+          </div>
+
+          <div class="control">
+            <div class="control-head">
+              <label>Target temp</label>
+              <span class="val" id="tempVal">62 °C</span>
+            </div>
+            <input type="range" id="temp" min="50" max="80" value="62" />
+          </div>
+
+          <div class="control">
+            <label style="display:block;margin-bottom:6px;">Pour technique</label>
+            <div class="toggle-group" id="pourGroup">
+              <button data-val="plain">Plain pour</button>
+              <button data-val="heart" class="active">Heart</button>
+              <button data-val="rosetta">Rosetta</button>
+              <button data-val="tulip">Tulip</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============== STATE ==============
+const state = {
+  grind: 12,
+  dose: 18,
+  tamp: 30,
+  time: 28,
+  yield: 36,
+  pf: "stock",
+  basket: "double",
+  milk: false,
+  milkType: "cow",
+  steam: 12,
+  temp: 62,
+  pour: "heart",
+};
+
+// ============== HELPERS ==============
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// Shot quality model. Everything scaled 0..1.
+function evaluate() {
+  const s = state;
+
+  // --- Expected time from grind and dose ---
+  // Finer grind + larger dose = slower flow. Sweet spot ~25-32s for 1:2.
+  const ratio = s.yield / s.dose;
+
+  // Ideal time given the grind (coarser -> faster ideal).
+  // grind 1 -> ideal ~40s (overextracted risk), grind 30 -> ~12s
+  const idealTime = lerp(38, 14, (s.grind - 1) / 29);
+  const timeDelta = s.time - idealTime; // positive = slower than ideal = over
+  const timeOffset = timeDelta / 10; // normalised offset
+
+  // Grind-based channeling probability (bottomless only reveals this)
+  const tooFine = Math.max(0, (8 - s.grind) / 8);      // very fine risk
+  const tooCoarse = Math.max(0, (s.grind - 22) / 8);   // very coarse risk
+
+  // Tamp pressure. Sweet spot ~28-35 lb.
+  const tampOffset = (s.tamp - 31) / 20;
+
+  // Extraction percentage model (0.14..0.26 typical)
+  // Base extraction climbs with time, grind fineness.
+  let ext = 0.18
+    + (s.time - 28) * 0.003         // time
+    + (15 - s.grind) * 0.002        // finer => more extraction
+    + Math.max(0, tampOffset) * 0.01 // heavy tamp slows, extracts more
+    + (ratio - 2) * 0.008;          // longer ratio extracts more
+  ext = clamp(ext, 0.10, 0.30);
+
+  // How far from ideal (20-22%)?
+  const extIdeal = 0.21;
+  const extGap = ext - extIdeal;
+  // Balance: 1 when ext≈21%
+  const balance = clamp(1 - Math.abs(extGap) * 15, 0, 1);
+
+  // Strength (TDS-like). Shorter ratio = stronger. More dose = stronger.
+  let strength = clamp(
+    0.5
+    + (2 - ratio) * 0.18
+    + (s.dose - 18) * 0.015
+    + (s.time - 28) * 0.005,
+    0, 1
+  );
+
+  // Body
+  let body = clamp(
+    0.55
+    + (s.dose - 18) * 0.02
+    + (2 - ratio) * 0.1
+    - Math.abs(tampOffset) * 0.1
+    - tooCoarse * 0.3,
+    0, 1
+  );
+
+  // Crema quality: needs fresh-ish beans (assumed), proper grind, time in band,
+  // and pressurized baskets help with less-than-fresh beans.
+  let crema = clamp(
+    0.6
+    - Math.abs(timeOffset) * 0.25
+    - Math.abs(tampOffset) * 0.1
+    - tooCoarse * 0.4
+    + (s.pf === "stock" ? 0.15 : 0)   // dual-wall boosts crema artificially
+    - tooFine * 0.2,
+    0, 1
+  );
+
+  // Channeling likelihood (only visible bottomless)
+  const channeling = clamp(
+    tooFine * 0.5
+    + Math.abs(tampOffset) * 0.3
+    + Math.max(0, -timeOffset) * 0.1,   // fast gushing
+    0, 1
+  );
+
+  // Categorize extraction
+  let extTag = "balanced";
+  if (extGap < -0.025) extTag = "sour"; // under
+  else if (extGap > 0.025) extTag = "bitter"; // over
+
+  // Flow speed: less time, more volume = faster flow
+  const flowSpeed = clamp(s.yield / s.time / 2.5, 0.3, 1.8); // g/s normalised
+
+  return {
+    ratio, ext, extGap, extTag, balance, strength, body, crema,
+    channeling, idealTime, timeDelta, flowSpeed,
+    tooFine, tooCoarse, tampOffset,
+  };
+}
+
+// ============== RENDER ==============
+function renderVis(ev) {
+  const s = state;
+
+  // Portafilter swap
+  $("stockSpouts").style.display = s.pf === "stock" ? "" : "none";
+  $("bottomlessBasket").style.display = s.pf === "bottomless" ? "" : "none";
+
+  // Flow visualization
+  const flow = $("flowGroup");
+  flow.innerHTML = "";
+  const flowStartY = s.pf === "stock" ? 128 : 113;
+  const flowEndY = 390;
+
+  if (s.pf === "stock") {
+    // Two small streams from spouts
+    const streams = [190, 230];
+    streams.forEach((x, i) => {
+      const width = 1.2 + ev.flowSpeed * 0.6;
+      const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+      // slight wobble
+      path.setAttribute("d", `M ${x},${flowStartY} Q ${x + (i===0?-1:1)},${(flowStartY+flowEndY)/2} ${x},${flowEndY}`);
+      path.setAttribute("stroke", "url(#flowGrad)");
+      path.setAttribute("stroke-width", width);
+      path.setAttribute("fill", "none");
+      path.setAttribute("opacity", "0.9");
+      flow.appendChild(path);
+    });
+  } else {
+    // Bottomless: single mouse-tail stream that merges
+    const baseWidth = 3 + ev.flowSpeed * 2;
+    // If channeling, draw multiple uneven streams
+    if (ev.channeling > 0.35) {
+      // messy multi-stream
+      const spread = 20;
+      for (let i = 0; i < 4; i++) {
+        const xOff = (i - 1.5) * (spread * ev.channeling);
+        const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        path.setAttribute("d", `M ${210 + xOff*0.4},${flowStartY + i} Q ${210 + xOff},${(flowStartY+flowEndY)/2} ${210 + xOff*0.6},${flowEndY}`);
+        path.setAttribute("stroke", "url(#flowGrad)");
+        path.setAttribute("stroke-width", 1.3);
+        path.setAttribute("fill", "none");
+        path.setAttribute("opacity", "0.75");
+        flow.appendChild(path);
+      }
+      // warning sparkles (spritzer)
+      for (let i = 0; i < 5; i++) {
+        const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        const ang = Math.random() * Math.PI * 2;
+        c.setAttribute("cx", 210 + Math.cos(ang) * (25 + Math.random() * 20));
+        c.setAttribute("cy", 130 + Math.random() * 40);
+        c.setAttribute("r", 1.2);
+        c.setAttribute("fill", "#c88a4a");
+        c.setAttribute("opacity", "0.8");
+        flow.appendChild(c);
+      }
+    } else {
+      // Clean mouse-tail - tapering stream
+      const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+      const widthTop = baseWidth;
+      const widthBot = Math.max(1, baseWidth * 0.55);
+      // Draw as trapezoid for tapering stream
+      path.setAttribute("d", `M ${210 - widthTop/2},${flowStartY} L ${210 + widthTop/2},${flowStartY} L ${210 + widthBot/2},${flowEndY} L ${210 - widthBot/2},${flowEndY} Z`);
+      path.setAttribute("fill", "url(#flowGrad)");
+      path.setAttribute("opacity", "0.95");
+      flow.appendChild(path);
+    }
+  }
+
+  // Flow hint text
+  const pfLabel = s.pf === "stock" ? "STOCK PORTAFILTER" : "BOTTOMLESS";
+  let flowState;
+  if (ev.flowSpeed < 0.6) flowState = "SLOW DRIP";
+  else if (ev.flowSpeed > 1.3) flowState = "GUSHING";
+  else flowState = "STEADY POUR";
+  let extraWarn = "";
+  if (ev.channeling > 0.35 && s.pf === "bottomless") extraWarn = " · CHANNELING";
+  $("flowHint").textContent = `${pfLabel} · ${flowState}${extraWarn}`;
+
+  // Liquid fill — level rises with yield, modulated by milk
+  const cupCapacity = 150; // ml equivalent visual
+  const espressoMl = s.yield; // grams ≈ ml roughly for espresso
+  const milkMl = s.milk ? (s.steam * 8) : 0;
+  const totalMl = espressoMl + milkMl;
+
+  // Vertical mapping: fill level between y=465 (bottom) and y=315 (top rim inside)
+  const cupBottom = 465;
+  const cupTop = 320;
+  const cupHeightPx = cupBottom - cupTop;
+  const fillPct = clamp(totalMl / cupCapacity, 0, 1);
+  const liquidTopY = cupBottom - cupHeightPx * fillPct;
+
+  // Crema thickness based on crema score (3-14 px)
+  const cremaThick = 3 + ev.crema * 11;
+
+  const espressoLayer = $("espressoLayer");
+  const cremaLayer = $("cremaLayer");
+  const milkLayer = $("milkLayer");
+
+  if (!s.milk) {
+    // Pure espresso
+    espressoLayer.setAttribute("y", liquidTopY + cremaThick);
+    espressoLayer.setAttribute("height", cupBottom - (liquidTopY + cremaThick));
+    cremaLayer.setAttribute("y", liquidTopY);
+    cremaLayer.setAttribute("height", cremaThick);
+    cremaLayer.setAttribute("opacity", 0.5 + ev.crema * 0.5);
+    milkLayer.setAttribute("opacity", 0);
+
+    // Crema color variation: under = pale, over = dark tiger stripes
+    let cremaColor = "url(#cremaGrad)";
+    if (ev.extTag === "sour") cremaColor = "#d9b88a";
+    else if (ev.extTag === "bitter") cremaColor = "#8a5528";
+    cremaLayer.setAttribute("fill", cremaColor);
+
+    // Crema dots/texture
+    renderCremaTexture(ev, liquidTopY, cremaThick);
+    $("latteArt").setAttribute("opacity", 0);
+  } else {
+    // Espresso + milk
+    // Espresso portion (bottom)
+    const espHeight = cupHeightPx * (espressoMl / cupCapacity);
+    const milkHeight = cupHeightPx * (milkMl / cupCapacity);
+    const espY = cupBottom - espHeight;
+
+    espressoLayer.setAttribute("y", espY);
+    espressoLayer.setAttribute("height", espHeight);
+    cremaLayer.setAttribute("opacity", 0);
+
+    milkLayer.setAttribute("y", liquidTopY);
+    milkLayer.setAttribute("height", milkHeight);
+    milkLayer.setAttribute("opacity", 1);
+
+    renderLatteArt(ev, liquidTopY, milkHeight, espHeight);
+  }
+
+  // Steam from milk
+  $("steamGroup").setAttribute("opacity", s.milk && s.temp > 55 ? (s.temp - 55) / 30 : 0);
+}
+
+function renderCremaTexture(ev, topY, thick) {
+  const g = $("cremaDots");
+  g.innerHTML = "";
+  if (ev.crema < 0.25) return;
+  const count = Math.floor(5 + ev.crema * 12);
+  for (let i = 0; i < count; i++) {
+    const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx", 140 + Math.random() * 140);
+    c.setAttribute("cy", topY + Math.random() * thick * 0.9);
+    c.setAttribute("r", 0.8 + Math.random() * 1.2);
+    c.setAttribute("fill", "#6a3416");
+    c.setAttribute("opacity", 0.3 + Math.random() * 0.3);
+    g.appendChild(c);
+  }
+  // Tiger stripes for over-extraction
+  if (ev.extTag === "bitter") {
+    for (let i = 0; i < 6; i++) {
+      const line = document.createElementNS("http://www.w3.org/2000/svg","path");
+      const y = topY + Math.random() * thick;
+      line.setAttribute("d", `M ${150 + Math.random()*120},${y} q 10,0.5 20,0`);
+      line.setAttribute("stroke", "#3a1a08");
+      line.setAttribute("stroke-width", 0.6);
+      line.setAttribute("fill","none");
+      line.setAttribute("opacity", 0.5);
+      g.appendChild(line);
+    }
+  }
+}
+
+function renderLatteArt(ev, topY, milkH, espH) {
+  const g = $("latteArt");
+  g.innerHTML = "";
+  const s = state;
+
+  // Latte art quality factors
+  // - Milk type: oat barista edition can be great; skim makes dry foam (bad)
+  // - Steam time: too long => wrecked microfoam
+  // - Temp: >70°C scalds, foam breaks
+  // - Pour technique choice sets pattern complexity
+  const tempPenalty = s.temp > 70 ? (s.temp - 70) / 10 : 0;
+  const overSteam = s.steam > 18 ? (s.steam - 18) / 7 : 0;
+  const underSteam = s.steam < 7 ? (7 - s.steam) / 3 : 0;
+
+  const milkFoamQuality = clamp(
+    (s.milkType === "cow" ? 0.9 :
+     s.milkType === "oat" ? 0.8 :
+     0.4) // skim makes stiff big bubbles
+    - tempPenalty * 0.6
+    - overSteam * 0.5
+    - underSteam * 0.6
+    , 0, 1
+  );
+
+  const artQuality = clamp(
+    milkFoamQuality * 0.6
+    + ev.crema * 0.3
+    + (s.pf === "stock" ? 0 : 0.05) // negligible
+    , 0, 1
+  );
+
+  if (s.pour === "plain" || artQuality < 0.15) {
+    // Just milk, maybe a blob
+    if (artQuality > 0.2) {
+      const c = document.createElementNS("http://www.w3.org/2000/svg","ellipse");
+      c.setAttribute("cx", 210);
+      c.setAttribute("cy", topY + 8);
+      c.setAttribute("rx", 20);
+      c.setAttribute("ry", 6);
+      c.setAttribute("fill", "#fffaf0");
+      c.setAttribute("opacity", 0.9);
+      g.appendChild(c);
+    }
+    g.setAttribute("opacity", 1);
+    return;
+  }
+
+  // Center point for art (top surface of milk)
+  const cx = 210;
+  const cy = topY + 6;
+  const scale = clamp(artQuality, 0.3, 1);
+  const color = "#fffaf0";
+  const stroke = "#e8dcc4";
+
+  if (s.pour === "heart") {
+    const w = 30 * scale;
+    const h = 22 * scale;
+    const d = `M ${cx},${cy + h*0.6}
+               C ${cx - w}, ${cy + h*0.2} ${cx - w}, ${cy - h*0.5} ${cx}, ${cy - h*0.1}
+               C ${cx + w}, ${cy - h*0.5} ${cx + w}, ${cy + h*0.2} ${cx},${cy + h*0.6} Z`;
+    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d", d);
+    p.setAttribute("fill", color);
+    p.setAttribute("stroke", stroke);
+    p.setAttribute("stroke-width", 0.5);
+    p.setAttribute("opacity", clamp(0.4 + artQuality * 0.6, 0, 1));
+    g.appendChild(p);
+  } else if (s.pour === "rosetta") {
+    // Draw central stem and alternating leaves
+    const stem = document.createElementNS("http://www.w3.org/2000/svg","path");
+    stem.setAttribute("d", `M ${cx},${cy - 18*scale} L ${cx},${cy + 18*scale}`);
+    stem.setAttribute("stroke", color);
+    stem.setAttribute("stroke-width", 1.5);
+    g.appendChild(stem);
+    const leafCount = Math.floor(3 + artQuality * 4);
+    for (let i = 0; i < leafCount; i++) {
+      const t = (i / (leafCount - 1)) * 2 - 1; // -1..1
+      const y = cy + t * 18 * scale;
+      const w = (1 - Math.abs(t) * 0.5) * 22 * scale;
+      const leaf = document.createElementNS("http://www.w3.org/2000/svg","path");
+      leaf.setAttribute("d", `M ${cx - w},${y} Q ${cx},${y - 4} ${cx + w},${y} Q ${cx},${y + 4} ${cx - w},${y} Z`);
+      leaf.setAttribute("fill", color);
+      leaf.setAttribute("opacity", clamp(0.4 + artQuality * 0.6, 0, 1));
+      g.appendChild(leaf);
+    }
+  } else if (s.pour === "tulip") {
+    const stacks = Math.floor(2 + artQuality * 3);
+    for (let i = 0; i < stacks; i++) {
+      const scl = scale * (1 - i * 0.2);
+      const cy2 = cy - i * 7 * scale;
+      const e = document.createElementNS("http://www.w3.org/2000/svg","ellipse");
+      e.setAttribute("cx", cx);
+      e.setAttribute("cy", cy2);
+      e.setAttribute("rx", 18 * scl);
+      e.setAttribute("ry", 6 * scl);
+      e.setAttribute("fill", color);
+      e.setAttribute("opacity", clamp(0.4 + artQuality * 0.6, 0, 1));
+      g.appendChild(e);
+    }
+    // Stem line
+    const stem = document.createElementNS("http://www.w3.org/2000/svg","path");
+    stem.setAttribute("d", `M ${cx},${cy} L ${cx},${cy + 12 * scale}`);
+    stem.setAttribute("stroke", color);
+    stem.setAttribute("stroke-width", 1);
+    g.appendChild(stem);
+  }
+
+  // If foam is bad, draw big ugly bubbles
+  if (milkFoamQuality < 0.4) {
+    for (let i = 0; i < 5; i++) {
+      const b = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      b.setAttribute("cx", 150 + Math.random() * 120);
+      b.setAttribute("cy", topY + Math.random() * 10);
+      b.setAttribute("r", 2 + Math.random() * 3);
+      b.setAttribute("fill", "#fff");
+      b.setAttribute("opacity", 0.7);
+      g.appendChild(b);
+    }
+  }
+
+  g.setAttribute("opacity", 1);
+}
+
+function renderMeters(ev) {
+  const setMeter = (id, v, color) => {
+    $(id + "Fill").style.width = (v * 100) + "%";
+    $(id + "Fill").style.background = color;
+    $(id + "Score").textContent = Math.round(v * 100);
+  };
+  // Strength color scale
+  setMeter("strength", ev.strength, ev.strength > 0.75 ? "var(--bad)" : ev.strength < 0.25 ? "var(--warn)" : "var(--accent)");
+  setMeter("crema", ev.crema, ev.crema > 0.6 ? "var(--crema)" : ev.crema > 0.3 ? "var(--warn)" : "var(--bad)");
+  setMeter("body", ev.body, ev.body > 0.6 ? "var(--accent-2)" : "var(--muted)");
+  setMeter("balance", ev.balance, ev.balance > 0.7 ? "var(--good)" : ev.balance > 0.4 ? "var(--warn)" : "var(--bad)");
+}
+
+function renderVerdict(ev) {
+  const s = state;
+  const badge = $("verdictBadge");
+  const title = $("verdictTitle");
+  const text = $("verdictText");
+
+  let cls = "good", label = "Good", titleText = "Balanced shot", body = "";
+
+  if (ev.extTag === "sour") {
+    cls = "bad"; label = "Sour"; titleText = "Under-extracted";
+    body = "Flow was too fast — water didn't dissolve enough solubles. Expect sour, sharp, thin mouthfeel.";
+  } else if (ev.extTag === "bitter") {
+    cls = "bad"; label = "Bitter"; titleText = "Over-extracted";
+    body = "Flow was slow and you pulled too much from the puck. Expect bitter, ashy, dry finish.";
+  } else if (ev.balance > 0.8) {
+    cls = "good"; label = "Great"; titleText = "Well balanced";
+    body = "Extraction sits in the ideal window. Sweet, balanced, with a pleasant lingering finish.";
+  } else {
+    cls = "warn"; label = "OK"; titleText = "Close to target";
+    body = "Near the balanced zone — small tweaks to grind or time will sharpen the result.";
+  }
+
+  if (ev.channeling > 0.5 && s.pf === "bottomless") {
+    cls = "bad"; label = "Channeling"; titleText = "Puck failure";
+    body = "Multiple streams spritzing from the basket — water punched through weak spots instead of flowing evenly.";
+  }
+
+  badge.className = "badge " + cls;
+  badge.textContent = label;
+  title.textContent = titleText;
+  text.textContent = body;
+}
+
+function renderInsights(ev) {
+  const s = state;
+  const tips = [];
+
+  // Grind
+  if (ev.timeDelta > 6) {
+    tips.push(`<strong>Grind is too fine for this time.</strong> At setting ${s.grind}, water struggled through the puck for ${s.time}s. Try ${Math.min(30, s.grind + 2)}–${Math.min(30, s.grind + 3)}.`);
+  } else if (ev.timeDelta < -6) {
+    tips.push(`<strong>Grind is too coarse.</strong> Shot gushed out in ${s.time}s — go finer, try ${Math.max(1, s.grind - 2)}–${Math.max(1, s.grind - 3)}.`);
+  }
+
+  // Ratio
+  if (ev.ratio < 1.6) {
+    tips.push(`<strong>Ristretto territory (${ev.ratio.toFixed(2)}:1).</strong> Syrupy, intense, low clarity. Great in milk drinks, punchy on its own.`);
+  } else if (ev.ratio > 2.8) {
+    tips.push(`<strong>Lungo territory (${ev.ratio.toFixed(2)}:1).</strong> Lighter body, more caffeine extracted, risk of bitterness if grind doesn't compensate.`);
+  }
+
+  // Tamp
+  if (Math.abs(ev.tampOffset) > 0.4) {
+    if (ev.tampOffset > 0) {
+      tips.push(`<strong>Tamp is heavier than needed.</strong> Above ~35 lb you get diminishing returns and sore wrists — consistency matters more than force.`);
+    } else {
+      tips.push(`<strong>Tamp is too light.</strong> Under ~25 lb the puck resists unevenly and channels. Aim for firm and level, around 30 lb.`);
+    }
+  }
+
+  // Portafilter
+  if (s.pf === "stock") {
+    tips.push(`<strong>Dual-wall (pressurized) basket fitted.</strong> It fakes crema by forcing air through a small hole — forgiving of bad grind but masks real extraction. Switch to the single-wall basket (or bottomless) once you're dialled in.`);
+  } else {
+    if (ev.channeling < 0.2) {
+      tips.push(`<strong>Clean mouse-tail stream.</strong> Bottomless proves your prep is solid — even distribution and tamp.`);
+    } else if (ev.channeling > 0.3) {
+      tips.push(`<strong>Channeling visible.</strong> Distribute more carefully (WDT or rake), level the puck, tamp flat. Bottomless shows what stock hides.`);
+    }
+  }
+
+  // Basket mismatch
+  if (s.basket === "single" && s.dose > 10) {
+    tips.push(`<strong>Dose overflows the single basket.</strong> Drop to ~7–9 g or switch to double.`);
+  }
+  if (s.basket === "triple" && s.dose < 19) {
+    tips.push(`<strong>Triple basket under-dosed.</strong> Headspace is too big — the puck won't compress properly. Dose 20–22 g.`);
+  }
+
+  // Fine too much
+  if (ev.tooFine > 0.4) {
+    tips.push(`<strong>Very fine grind detected.</strong> Risks stalling the pump and heavy over-extraction. The Barista Pro's burrs open up around 8–14 for most espresso beans.`);
+  }
+
+  // Milk tips
+  if (s.milk) {
+    if (s.temp > 70) {
+      tips.push(`<strong>Milk overheated.</strong> Above 70 °C proteins denature and the foam collapses. Aim for 60–65 °C for sweetness and stable microfoam.`);
+    }
+    if (s.temp < 55) {
+      tips.push(`<strong>Milk is underheated.</strong> Drink will feel thin and cool — texture needs ~60 °C for that silky paint-like pour.`);
+    }
+    if (s.steam < 6) {
+      tips.push(`<strong>Not enough steam time.</strong> Foam hasn't formed — it's just warm milk. Introduce air early for 3–4 seconds, then submerge the wand to texture.`);
+    }
+    if (s.steam > 18) {
+      tips.push(`<strong>Over-steamed.</strong> Big bubbles on the surface — foam is stiff and dry, no micro-texture, can't pour art.`);
+    }
+    if (s.milkType === "skim") {
+      tips.push(`<strong>Skim makes meringue, not microfoam.</strong> Low fat means stiff, dry foam — great for cappuccino dry-style, poor for latte art.`);
+    }
+    if (s.milkType === "oat") {
+      tips.push(`<strong>Oat barista edition.</strong> Proteins + added oil give silky microfoam close to cow whole. Watch temperature — oat is more fragile above 65 °C.`);
+    }
+    if (s.milkType === "cow") {
+      tips.push(`<strong>Whole cow milk.</strong> The reference for latte art — fat carries flavour, protein stabilises foam.`);
+    }
+    if (s.pour === "rosetta" && ev.crema < 0.4) {
+      tips.push(`<strong>Rosetta needs strong crema.</strong> Without a firm canvas the leaves blur. Dial the shot first, art second.`);
+    }
+  }
+
+  if (tips.length === 0) {
+    tips.push(`<strong>Looking good.</strong> Taste is the final judge — trust your palate and iterate.`);
+  }
+
+  $("insights").innerHTML = tips.slice(0, 5).map(t => `<div class="insight">${t}</div>`).join("");
+}
+
+// ============== UPDATE LOOP ==============
+function update() {
+  // Sync UI values
+  $("grindVal").textContent = state.grind;
+  $("doseVal").textContent = state.dose.toFixed(1) + " g";
+  $("tampVal").textContent = state.tamp + " lb";
+  $("timeVal").textContent = state.time + " s";
+  $("yieldVal").textContent = state.yield + " g";
+  $("ratioVal").textContent = "1:" + (state.yield / state.dose).toFixed(2);
+  $("steamVal").textContent = state.steam + " s";
+  $("tempVal").textContent = state.temp + " °C";
+
+  const ev = evaluate();
+  renderVis(ev);
+  renderMeters(ev);
+  renderVerdict(ev);
+  renderInsights(ev);
+}
+
+// ============== WIRING ==============
+["grind","dose","tamp","time","yield","steam","temp"].forEach(id => {
+  $(id).addEventListener("input", (e) => {
+    state[id] = parseFloat(e.target.value);
+    update();
+  });
+});
+
+function bindGroup(groupId, key) {
+  const grp = $(groupId);
+  grp.querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => {
+      grp.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      state[key] = b.dataset.val;
+      update();
+    });
+  });
+}
+bindGroup("pfGroup", "pf");
+bindGroup("basketGroup", "basket");
+bindGroup("milkTypeGroup", "milkType");
+bindGroup("pourGroup", "pour");
+
+$("milkOn").addEventListener("change", (e) => {
+  state.milk = e.target.checked;
+  $("milkSection").classList.toggle("on", state.milk);
+  update();
+});
+
+// Presets
+const presets = {
+  classic:   { grind: 12, dose: 18, tamp: 30, time: 28, yield: 36, basket: "double" },
+  ristretto: { grind: 9,  dose: 18, tamp: 32, time: 30, yield: 24, basket: "double" },
+  lungo:     { grind: 16, dose: 18, tamp: 28, time: 32, yield: 54, basket: "double" },
+  modern:    { grind: 14, dose: 18, tamp: 30, time: 26, yield: 45, basket: "double" },
+};
+document.querySelectorAll(".preset").forEach(b => {
+  b.addEventListener("click", () => {
+    const p = presets[b.dataset.preset];
+    Object.assign(state, p);
+    // sync sliders
+    ["grind","dose","tamp","time","yield"].forEach(k => $(k).value = state[k]);
+    // sync basket
+    const bg = $("basketGroup");
+    bg.querySelectorAll("button").forEach(x => x.classList.toggle("active", x.dataset.val === state.basket));
+    update();
+  });
+});
+
+// init
+update();
+</script>
+</body>
+</html>
